@@ -1,3 +1,6 @@
+import mime from "mime";
+import { FsItem } from "../types";
+
 export const getLast = <T,>(a: Array<T>) => {
     return a[a.length - 1];
 };
@@ -22,8 +25,25 @@ export const arrayToPath = (a: string[]) => {
     if (a.length === 1) return "/";
     return a.join("/").substring(1);
 };
+
 export const pathToArray = (path: string) => {
     let a: string[] = path.split("/");
     a[0] = "/";
     return a;
+};
+
+export const getFileType = (fsi: FsItem) => {
+    return mime.getType(arrayToPath(fsi.path));
+};
+
+/**
+ * Supported Display Mime Types
+ */
+
+export const sdmt = {
+    nativeImages: ["image/jpeg", "image/png", "image/webp", "image/tiff"],
+    polyfilledImages: ["image/avif"],
+    pdf: ["application/pdf"],
+    textLike: ["application/json", "text/javascript"],
+    nativeVideos: ["video/mp4", "video/mpeg", "video/webm", "video/quicktime"]
 };

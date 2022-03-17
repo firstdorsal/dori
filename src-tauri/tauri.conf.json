@@ -41,10 +41,6 @@
                 "all": false,
                 "asset": true,
                 "assetScope": ["*"]
-            },
-            "fs": {
-                "all": true,
-                "scope": ["$HOME/*"]
             }
         },
         "windows": [

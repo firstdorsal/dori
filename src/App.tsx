@@ -24,7 +24,7 @@ interface AppState {
 export class App extends Component<AppProps, AppState> {
     state = {
         fileList: [] as FsItem[],
-        currentDir: ["/", "home", "paul", "Documents"],
+        currentDir: ["/", "home", "paul", "Downloads", "import-images"],
         hostname: "",
         history: [],
         historyIndex: -1,
