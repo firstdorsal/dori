@@ -10,6 +10,7 @@ import Settings from "./components/settings/Settings";
 import FileList from "./components/main/FileList";
 import Menu from "./components/menu/Menu";
 import Preview from "./components/preview/Preview";
+import { WebviewWindow } from "@tauri-apps/api/window";
 
 interface AppProps {}
 interface AppState {
@@ -34,7 +35,7 @@ export class App extends Component<AppProps, AppState> {
         const newDirPath = arrayToPath(fullDir);
 
         const a: FsItem[] = await invoke("read_dir", {
-            dir: newDirPath
+            path: newDirPath
         });
 
         this.setState(({ history, historyIndex }) => {
@@ -85,6 +86,18 @@ export class App extends Component<AppProps, AppState> {
     render = () => {
         return (
             <div className="App">
+                <button
+                    onClick={() => {
+                        const n = "test" + Math.random().toString().replace(".", "");
+                        console.log(n);
+
+                        const webview = new WebviewWindow(n, {
+                            url: "/"
+                        });
+                    }}
+                >
+                    New Window
+                </button>
                 <Menu
                     reload={this.reload}
                     goUp={this.goUp}

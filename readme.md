@@ -44,3 +44,11 @@ MOZ_ENABLE_WAYLAND=1 thunderbird
 /etc/environment
 
 #cp ./node_modules/pdfjs-dist/build/pdf.worker.min.js public/
+
+open with
+squoosh
+photopea
+gimp
+inkscape
+etc.
+make configurable

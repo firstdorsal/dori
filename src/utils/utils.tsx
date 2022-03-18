@@ -33,7 +33,16 @@ export const pathToArray = (path: string) => {
 };
 
 export const getFileType = (fsi: FsItem) => {
-    return mime.getType(arrayToPath(fsi.path));
+    mime.define({ "text/typescript": ["ts"] }, true);
+    let type = mime.getType(arrayToPath(fsi.path));
+
+    return type;
+};
+
+export const isTextType = (type: string) => {
+    if (type.startsWith("text/")) return true;
+    if (sdmt.textLike.includes(type)) return true;
+    return false;
 };
 
 /**
@@ -41,9 +50,9 @@ export const getFileType = (fsi: FsItem) => {
  */
 
 export const sdmt = {
-    nativeImages: ["image/jpeg", "image/png", "image/webp", "image/tiff"],
+    nativeImages: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
     polyfilledImages: ["image/avif"],
     pdf: ["application/pdf"],
-    textLike: ["application/json", "text/javascript"],
+    textLike: ["application/json"],
     nativeVideos: ["video/mp4", "video/mpeg", "video/webm", "video/quicktime"]
 };

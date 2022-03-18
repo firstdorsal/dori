@@ -1,69 +1,58 @@
 import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { Component, useEffect, useRef } from "react";
+import { Component, PureComponent, useEffect, useRef } from "react";
 import { FsItem } from "../../types";
-import { arrayToPath, getFileType, sdmt } from "../../utils/utils";
+import { arrayToPath, getFileType, isTextType, sdmt } from "../../utils/utils";
 import { readBinaryFile } from "@tauri-apps/api/fs";
 /*@ts-ignore*/
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
+import { invoke } from "@tauri-apps/api";
 
 interface PreviewProps {
     fsi: FsItem | null;
 }
 interface PreviewState {
-    data: Uint8Array | null;
+    file: Data;
     lastPath: string;
 }
+
+type Data = Uint8Array | 1 | string | null;
+
 export default class Preview extends Component<PreviewProps, PreviewState> {
-    state = { data: null, lastPath: "" };
+    state = { file: null, lastPath: "" };
 
     componentDidUpdate = async () => {
-        await this.loadBinary(this.props.fsi);
+        await this.loadFile(this.props.fsi);
     };
 
     componentDidMount = async () => {
-        await this.loadBinary(this.props.fsi);
+        await this.loadFile(this.props.fsi);
     };
 
-    loadBinary = async (fsi: FsItem | null) => {
+    loadFile = async (fsi: FsItem | null) => {
         if (fsi?.path) {
             const currentPath = arrayToPath(fsi.path);
+
             if (currentPath === this.state.lastPath) return;
-            this.setState({ lastPath: currentPath });
 
             const type = getFileType(fsi);
             if (!type) return;
-            if (sdmt.pdf.includes(type)) {
-                const data = await readBinaryFile(currentPath);
-                console.log(data);
-                this.setState({ data });
+            if (sdmt.pdf.includes(type) || isTextType(type)) {
+                this.setState({ file: 1, lastPath: currentPath });
+                let file;
+                if (sdmt.pdf.includes(type)) {
+                    file = Uint8Array.from(
+                        await invoke("read_binary_file", {
+                            path: currentPath
+                        })
+                    );
+                } else {
+                    file = (await invoke("read_text_file", {
+                        path: currentPath
+                    })) as string;
+                }
+
+                this.setState({ file });
             }
-        }
-    };
-
-    previewFailed = () => {
-        return <div>Could not display preview</div>;
-    };
-
-    missingPreview = (type: string) => {
-        return <div>Missing preview method for file type: {type}</div>;
-    };
-
-    getPreview = (fsi: FsItem) => {
-        const type = getFileType(fsi);
-        console.log(type);
-
-        if (!type) return this.previewFailed();
-        if (sdmt.pdf.includes(type)) {
-            if (!this.state.data) return this.previewFailed();
-            return <Pdf data={this.state.data} fsi={fsi} />;
-        } else if (sdmt.nativeImages.includes(type)) {
-            return <Image fsi={fsi} />;
-        } else if (sdmt.nativeVideos.includes(type)) {
-            return <Video type={type} fsi={fsi} />;
-        } else if (type.startsWith("text/")) {
-            return <Text fsi={fsi} />;
-        } else {
-            return this.missingPreview(type);
         }
     };
 
@@ -83,25 +72,55 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
                 className="Preview"
             >
                 <div style={{ height: "100%", width: "100%" }}>
-                    {this.getPreview(this.props.fsi)}
+                    <GetPreview fsi={this.props.fsi} file={this.state.file} />
                 </div>
             </div>
         );
     };
 }
 
+const previewFailed = () => {
+    return <div>Could not display preview</div>;
+};
+
+const missingPreview = (type: string) => {
+    return <div>Missing preview method for file type: {type}</div>;
+};
+
+const GetPreview = (props: { fsi: FsItem; file: Data }) => {
+    const type = getFileType(props.fsi);
+
+    if (!type) return previewFailed();
+    if (sdmt.pdf.includes(type)) {
+        if (props.file === null) return previewFailed();
+        if (props.file === 1) {
+            return <div>Loading</div>;
+        }
+        return <Pdf file={props.file} fsi={props.fsi} />;
+    } else if (sdmt.nativeImages.includes(type)) {
+        return <Image fsi={props.fsi} />;
+    } else if (sdmt.nativeVideos.includes(type)) {
+        return <Video type={type} fsi={props.fsi} />;
+    } else if (isTextType(type)) {
+        return <Text fsi={props.fsi} file={props.file} />;
+    } else {
+        return missingPreview(type);
+    }
+};
+
 const Image = (props: { fsi: FsItem }) => {
     return <img src={convertFileSrc(arrayToPath(props.fsi.path))} alt="" />;
 };
 //https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf
-const Pdf = (props: { fsi: FsItem; data: Uint8Array | null }) => {
+const Pdf = (props: { fsi: FsItem; file: Data }) => {
     const canvasRef = useRef(null);
+    console.log(props.fsi.path, props.file);
 
     useEffect(() => {
-        (async function () {
+        (async () => {
             pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
             pdfjsLib.isEvalSupported = false;
-            const pdf = await pdfjsLib.getDocument(props.data).promise;
+            const pdf = await pdfjsLib.getDocument(props.file).promise;
 
             const page = await pdf.getPage(1);
             const viewport = page.getViewport({ scale: 1.5 });
@@ -119,8 +138,8 @@ const Pdf = (props: { fsi: FsItem; data: Uint8Array | null }) => {
     return <canvas ref={canvasRef} style={{ width: "100%" }} />;
 };
 
-const Text = (props: { fsi: FsItem }) => {
-    return <div></div>;
+const Text = (props: { fsi: FsItem; file: Data }) => {
+    return <div>{props.file}</div>;
 };
 
 const Video = (props: { fsi: FsItem; type: string }) => {
@@ -134,4 +153,6 @@ const Video = (props: { fsi: FsItem; type: string }) => {
     );
 };
 // TODO
-// tiff avif textfiles
+// tiff avif textfiles video svg
+// zoomable images
+// click through pdf pages
