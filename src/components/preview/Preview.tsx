@@ -2,7 +2,6 @@ import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Component, PureComponent, useEffect, useRef } from "react";
 import { FsItem } from "../../types";
 import { arrayToPath, getFileType, isTextType, sdmt } from "../../utils/utils";
-import { readBinaryFile } from "@tauri-apps/api/fs";
 /*@ts-ignore*/
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import { invoke } from "@tauri-apps/api";
@@ -119,7 +118,6 @@ const Pdf = (props: { fsi: FsItem; file: Data }) => {
     useEffect(() => {
         (async () => {
             pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
-            pdfjsLib.isEvalSupported = false;
             const pdf = await pdfjsLib.getDocument(props.file).promise;
 
             const page = await pdf.getPage(1);

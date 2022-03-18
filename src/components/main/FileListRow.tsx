@@ -22,7 +22,6 @@ export default class FileListRow extends Component<FileListRowProps, FileListRow
                         this.props.showPreview(fsi);
                     }}
                     style={style}
-                    className="file"
                 >
                     {getLast(fsi.path)}
                 </button>

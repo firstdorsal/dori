@@ -74,3 +74,16 @@ inkscape
 etc.
 
 make configurable
+
+create easy file share channel with smartphone via qr code
+
+synchronized terminal and explorer
+
+# tba
+
+can you drag files out of tauri?
+
+this is possible in electron
+https://www.electronjs.org/docs/latest/tutorial/native-file-drag-drop
+
+vscode does not support dragging files out; any dragout is realized through paths; this is what is possible in browsers

@@ -41,6 +41,12 @@
                 "all": false,
                 "asset": true,
                 "assetScope": ["*"]
+            },
+            "fs": {
+                "scope": ["$CONFIG/*"]
+            },
+            "path": {
+                "all": true
             }
         },
         "windows": [

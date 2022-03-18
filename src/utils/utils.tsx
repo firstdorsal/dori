@@ -1,5 +1,7 @@
+import { FromSchema } from "json-schema-to-ts";
 import mime from "mime";
-import { FsItem } from "../types";
+import { configSchema } from "../components/config/Schema";
+import { FsItem, FsType } from "../types";
 
 export const getLast = <T,>(a: Array<T>) => {
     return a[a.length - 1];
@@ -33,12 +35,16 @@ export const pathToArray = (path: string) => {
 };
 
 export const getFileType = (fsi: FsItem) => {
-    mime.define({ "text/typescript": ["ts"] }, true);
+    mime.define(typeMap, true);
     let type = mime.getType(arrayToPath(fsi.path));
+    console.log(type);
 
     return type;
 };
 
+/**
+ * Check if a file can be rendered as normal text
+ */
 export const isTextType = (type: string) => {
     if (type.startsWith("text/")) return true;
     if (sdmt.textLike.includes(type)) return true;
@@ -55,4 +61,16 @@ export const sdmt = {
     pdf: ["application/pdf"],
     textLike: ["application/json"],
     nativeVideos: ["video/mp4", "video/mpeg", "video/webm", "video/quicktime"]
+};
+export const typeMap: mime.TypeMap = { "text/typescript": ["ts"], "text/typescript+xml": ["tsx"] };
+
+export const getHotkeys = (config: FromSchema<typeof configSchema>) => {
+    const keyMap = {};
+
+    if (config === null || config.hotkeys?.useHotkeys === false) return keyMap;
+    config.hotkeys?.list.forEach(element => {
+        /*@ts-ignore*/
+        keyMap[element.action] = element.keys;
+    });
+    return keyMap;
 };

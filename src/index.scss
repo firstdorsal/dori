@@ -11,13 +11,17 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-size: 18px;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
 }
 
 * {
+    /*outline: 1px solid red;*/
     box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
+    /*-webkit-user-select: none;*/
     -webkit-user-drag: none;
+    outline: none;
 }
 
 #root {
@@ -32,15 +36,94 @@ body {
     color: #fff;
 }
 
-.file {
-    all: unset;
-    display: block;
-    text-align: left;
+.FileListRow {
+    width: 100%;
 
-    cursor: pointer;
-    font-size: 16px;
+    button {
+        all: unset;
+        background: #ccc;
+
+        display: block;
+        text-align: left;
+        width: 100%;
+        cursor: pointer;
+        font-size: 16px;
+    }
 }
+
 img {
     max-width: 100%;
     max-height: 100%;
+}
+
+form.rjsf {
+    button.btn-add::after,
+    button.array-item-remove::after {
+        height: 15px;
+        width: 15px;
+        padding: 0px;
+
+        color: black;
+    }
+    button.btn-add::after {
+        content: "+";
+    }
+    button.array-item-remove::after {
+        content: "-";
+    }
+
+    label,
+    input[type="checkbox"] {
+        margin-right: 5px;
+    }
+    input,
+    select {
+        background-color: var(--rs-input-bg);
+        border: 1px solid #e5e5ea;
+        border: 1px solid var(--rs-border-primary);
+        border-radius: 6px;
+        color: #575757;
+        color: var(--rs-text-primary);
+        font-size: 14px;
+        line-height: 1.42857143;
+        padding: 7px 11px;
+        -webkit-transition: border-color 0.3s ease-in-out;
+        transition: border-color 0.3s ease-in-out;
+    }
+
+    div.checkbox input {
+        cursor: pointer;
+    }
+
+    select {
+        padding: 3.5px 11px;
+    }
+
+    input:hover:not(:disabled) {
+        border-color: #3498ff;
+        border-color: var(--rs-input-focus-border);
+        outline: 0;
+    }
+
+    input:focus {
+        -webkit-box-shadow: 0 0 0 3px rgb(52 152 255 / 25%);
+        box-shadow: 0 0 0 3px rgb(52 152 255 / 25%);
+        -webkit-box-shadow: var(--rs-state-focus-shadow);
+        box-shadow: var(--rs-state-focus-shadow);
+    }
+
+    fieldset[id*="root_hotkeys_list"] {
+        border: none;
+        div {
+            display: inline-block;
+        }
+    }
+    fieldset {
+        border: none;
+        box-shadow: 1 1 1 black;
+    }
+
+    span.required {
+        display: none;
+    }
 }
