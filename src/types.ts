@@ -1,5 +1,5 @@
 import { FromSchema } from "json-schema-to-ts";
-import { configSchema } from "./utils/Schema";
+import { configSchema } from "./utils/configSchema";
 
 export enum Page {
     config = "config",

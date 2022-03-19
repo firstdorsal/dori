@@ -1,7 +1,7 @@
 import { FsItem, FsType } from "../types";
 import { getLast } from "./utils";
 
-export type SortMethod = "alphabetic" | "name-length";
+export type SortMethod = "alphabetic" | "name-length"; // TODO alphabetic ignore casing
 
 export const sortAlphabetic = (items: FsItem[]) => {
     return items.sort((item1, item2) => {

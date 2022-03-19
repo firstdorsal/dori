@@ -1,7 +1,7 @@
 import { Component } from "react";
 import { JSONSchema7 } from "json-schema";
 import Form from "@rjsf/core";
-import { configSchema } from "../../utils/Schema";
+import { configSchema } from "../../utils/configSchema";
 import { Config, Page } from "../../types";
 import { defaultConfig } from "../../utils/utils";
 

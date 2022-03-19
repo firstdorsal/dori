@@ -1,6 +1,6 @@
 import { FromSchema } from "json-schema-to-ts";
 import mime from "mime";
-import { configSchema } from "./Schema";
+import { configSchema } from "./configSchema";
 import { Config, FsItem, FsType } from "../types";
 
 export const getLast = <T>(a: Array<T>) => {
@@ -60,9 +60,10 @@ export const sdmt = {
     nativeImages: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
     polyfilledImages: ["image/avif"],
     pdf: ["application/pdf"],
-    textLike: ["application/json"],
+    textLike: ["application/json", "application/xml", "application/javascript"],
     nativeVideos: ["video/mp4", "video/mpeg", "video/webm", "video/quicktime"]
 };
+
 export const typeMap: mime.TypeMap = { "text/typescript": ["ts"], "text/typescript+xml": ["tsx"] };
 
 export const getHotkeys = (config: Config) => {

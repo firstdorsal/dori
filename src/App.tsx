@@ -10,13 +10,14 @@ import FileList from "./components/main/FileList";
 import Menu from "./components/menu/Menu";
 import Preview from "./components/preview/Preview";
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { sortItems } from "./utils/Sort";
+import { sortItems } from "./utils/sort";
 import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
 
-import { configSchema } from "./utils/Schema";
+import { configSchema } from "./utils/configSchema";
 import ConfigComponent from "./components/config/Config";
+import FsItemComponent, { FsItemComponentStyle } from "./components/common/FsItemComponent";
 
 interface AppProps {}
 interface AppState {
@@ -192,14 +193,17 @@ export class App extends Component<AppProps, AppState> {
                     >
                         {this.state.currentDir.map((pathItem, i) => {
                             return (
-                                <Breadcrumb.Item
-                                    key={pathItem}
-                                    onClick={() =>
-                                        this.updateDir(arrayUntil(this.state.currentDir, i))
-                                    }
-                                >
-                                    {i === 0 ? this.state.hostname : pathItem}
-                                </Breadcrumb.Item>
+                                <FsItemComponent
+                                    itemStyle={FsItemComponentStyle.breadcrumb}
+                                    updateDir={this.updateDir}
+                                    showPreview={this.showPreview}
+                                    breadcrumbInfo={{
+                                        hostname: this.state.hostname,
+                                        pathItem,
+                                        i,
+                                        currentDir: this.state.currentDir
+                                    }}
+                                />
                             );
                         })}
                     </Breadcrumb>
