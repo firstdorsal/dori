@@ -1,17 +1,23 @@
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Component, PureComponent, useEffect, useRef } from "react";
 import { FsItem } from "../../types";
-import { arrayToPath, getFileType, isTextType, sdmt } from "../../utils/utils";
+import {
+    arrayToPath,
+    getFileTypeFromFsItem,
+    getFileTypeFromString,
+    isTextType,
+    sdmt
+} from "../../utils/utils";
 /*@ts-ignore*/
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import { invoke } from "@tauri-apps/api";
 
 interface PreviewProps {
-    fsi: FsItem | null;
+    readonly fsi: FsItem | null;
 }
 interface PreviewState {
-    file: Data;
-    lastPath: string;
+    readonly file: Data;
+    readonly lastPath: string;
 }
 
 type Data = Uint8Array | 1 | string | null;
@@ -33,10 +39,13 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
 
             if (currentPath === this.state.lastPath) return;
 
-            const type = getFileType(fsi);
+            const type = getFileTypeFromString(currentPath);
             if (!type) return;
+            console.log(isTextType(type));
+
             if (sdmt.pdf.includes(type) || isTextType(type)) {
                 this.setState({ file: 1, lastPath: currentPath });
+
                 let file;
                 if (sdmt.pdf.includes(type)) {
                     file = Uint8Array.from(
@@ -87,12 +96,12 @@ const missingPreview = (type: string) => {
 };
 
 const GetPreview = (props: { fsi: FsItem; file: Data }) => {
-    const type = getFileType(props.fsi);
+    const type = getFileTypeFromFsItem(props.fsi);
 
     if (!type) return previewFailed();
     if (sdmt.pdf.includes(type)) {
         if (props.file === null) return previewFailed();
-        if (props.file === 1) {
+        if (typeof props.file === "string" || props.file === 1) {
             return <div>Loading</div>;
         }
         return <Pdf file={props.file} fsi={props.fsi} />;
@@ -101,6 +110,10 @@ const GetPreview = (props: { fsi: FsItem; file: Data }) => {
     } else if (sdmt.nativeVideos.includes(type)) {
         return <Video type={type} fsi={props.fsi} />;
     } else if (isTextType(type)) {
+        if (props.file === null) return previewFailed();
+        if (props.file === 1 || typeof props.file !== "string") {
+            return <div>Loading</div>;
+        }
         return <Text fsi={props.fsi} file={props.file} />;
     } else {
         return missingPreview(type);

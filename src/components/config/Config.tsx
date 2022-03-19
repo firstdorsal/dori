@@ -1,27 +1,26 @@
 import { Component } from "react";
 import { JSONSchema7 } from "json-schema";
-import { FromSchema } from "json-schema-to-ts";
 import Form from "@rjsf/core";
-import { configSchema } from "./Schema";
-import { defaultConfig } from "../../utils/defaultConfig";
+import { configSchema } from "../../utils/Schema";
+import { Config, Page } from "../../types";
+import { defaultConfig } from "../../utils/utils";
 
-interface ConfigProps {}
-interface ConfigState {
-    config: FromSchema<typeof configSchema>;
+interface ConfigComponentProps {
+    readonly updateConfig: Function;
+    readonly config: Config;
+    readonly updatePage: Function;
 }
-export default class Config extends Component<ConfigProps, ConfigState> {
-    state = {
-        config: defaultConfig
-    };
+interface ConfigComponentState {}
+export default class ConfigComponent extends Component<ConfigComponentProps, ConfigComponentState> {
     render = () => {
-        console.log(this.state.config);
-
         return (
-            <div className="Config">
+            <div className="ConfigComponent">
+                <button onClick={() => this.props.updateConfig(defaultConfig)}>Reset Config</button>
+                <button onClick={() => this.props.updatePage(Page.main)}>Back</button>
                 <Form
                     schema={configSchema as unknown as JSONSchema7}
-                    formData={this.state.config}
-                    onChange={(e: any) => this.setState({ config: e.formData })}
+                    formData={this.props.config}
+                    onChange={e => this.props.updateConfig(e.formData)}
                     liveValidate={true}
                 >
                     <div></div>

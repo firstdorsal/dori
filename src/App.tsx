@@ -1,12 +1,11 @@
-import { Component } from "react";
+import { Component, Fragment } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import { arrayToPath, arrayUntil, getHotkeys } from "./utils/utils";
+import { arrayToPath, arrayUntil, defaultConfig, getHotkeys } from "./utils/utils";
 import Breadcrumb from "rsuite/Breadcrumb";
 import "rsuite/dist/rsuite.min.css";
-import { FsItem } from "./types";
+import { Config, FsItem, Page } from "./types";
 import { FiChevronRight } from "react-icons/fi";
 
-import Settings from "./components/config/Config";
 import FileList from "./components/main/FileList";
 import Menu from "./components/menu/Menu";
 import Preview from "./components/preview/Preview";
@@ -15,31 +14,34 @@ import { sortItems } from "./utils/Sort";
 import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
-import { defaultConfig } from "./utils/defaultConfig";
-import { FromSchema } from "json-schema-to-ts";
-import { configSchema } from "./components/config/Schema";
+
+import { configSchema } from "./utils/Schema";
+import ConfigComponent from "./components/config/Config";
 
 interface AppProps {}
 interface AppState {
-    fileList: FsItem[];
-    currentDir: string[];
-    hostname: string;
-    history: string[][];
-    historyIndex: number;
-    preview: null | FsItem;
-    config: FromSchema<typeof configSchema> | null;
+    readonly fileList: FsItem[];
+    readonly currentDir: string[];
+    readonly hostname: string;
+    readonly history: string[][];
+    readonly historyIndex: number;
+    readonly preview: null | FsItem;
+    readonly config: Config | null;
+    readonly currentPage: Page;
 }
 
 export class App extends Component<AppProps, AppState> {
     state = {
         fileList: [] as FsItem[],
-        currentDir: ["/", "home", "paul", "Documents", "tauri-explorer"],
+        currentDir: ["/", "home", "paul", "Downloads"],
         hostname: "",
         history: [],
         historyIndex: -1,
         preview: null,
-        config: null
+        config: null,
+        currentPage: Page.main
     };
+
     updateDir = async (fullDir: string[], pushHistory = true, newIndex?: number) => {
         const newDirPath = arrayToPath(fullDir);
 
@@ -73,11 +75,11 @@ export class App extends Component<AppProps, AppState> {
         await this.updateDir(this.state.currentDir);
     };
 
-    goUp = () => {
+    goUpDirectory = () => {
         this.updateDir(arrayUntil(this.state.currentDir, this.state.currentDir.length - 2));
     };
 
-    reload = () => {
+    reloadDirectory = () => {
         this.updateDir(this.state.currentDir, false);
     };
 
@@ -94,17 +96,20 @@ export class App extends Component<AppProps, AppState> {
 
         this.updateDir(this.state.history[index], false, index);
     };
+
     showPreview = (fsi: FsItem) => {
         this.setState({ preview: fsi });
     };
+
     newWindow = () => {
-        const n = "test" + Math.random().toString().replace(".", "");
+        const n = "dori" + Math.random().toString().replace(".", "");
         console.log(n);
 
-        const webview = new WebviewWindow(n, {
+        new WebviewWindow(n, {
             url: "/"
         });
     };
+
     hotkeyHandlers = () => {
         return {
             NEW_WINDOW: () => {
@@ -112,76 +117,109 @@ export class App extends Component<AppProps, AppState> {
             }
         };
     };
+    writeConfig = async (configToWrite: Config, configPath: string) => {
+        const configString = JSON.stringify(configToWrite);
+        await writeFile({ contents: configString, path: configPath });
+        return configString;
+    };
+
+    getConfigPath = async () => {
+        return await path.join(await path.configDir(), "/tauri-explorer.json");
+    };
 
     loadConfig = async () => {
-        const newConfig = async () => {
-            const configString = JSON.stringify(defaultConfig);
-            await writeFile({ contents: JSON.stringify(defaultConfig), path: configPath });
-            return configString;
-        };
         // try to load config
-        const configPath = await path.join(await path.configDir(), "/tauri-explorer.json");
+
+        const configPath = await this.getConfigPath();
         let configString = await readTextFile(configPath).catch(async () => {
-            return await newConfig();
+            return await this.writeConfig(defaultConfig, configPath);
         });
-        if (configString.length === 0) configString = await newConfig();
+        if (configString.length === 0)
+            configString = await this.writeConfig(defaultConfig, configPath);
         const config = JSON.parse(configString);
         return config;
     };
 
-    updateConfig = () => {};
+    updateConfig = async (newConfig: Config) => {
+        const configPath = await this.getConfigPath();
+        console.log(newConfig);
+
+        this.setState({ config: newConfig });
+        await this.writeConfig(newConfig, configPath);
+    };
+
+    updatePage = (newPage: Page) => {
+        this.setState({ currentPage: newPage });
+    };
+
+    renderPage = (page: Page) => {
+        if (this.state.config === null) return <div></div>;
+
+        switch (page) {
+            case "config": {
+                return (
+                    <ConfigComponent
+                        updatePage={this.updatePage}
+                        config={this.state.config}
+                        updateConfig={this.updateConfig}
+                    />
+                );
+            }
+            case "main": {
+                return this.renderMain();
+            }
+            default: {
+                return <div>Error</div>;
+            }
+        }
+    };
+
+    renderMain = () => {
+        return (
+            <Fragment>
+                <button onClick={() => this.newWindow()}>New Window</button>
+                <Menu
+                    reload={this.reloadDirectory}
+                    goUp={this.goUpDirectory}
+                    goThroughHistory={this.goThroughHistory}
+                    updatePage={this.updatePage}
+                ></Menu>
+
+                <div className="UrlBar">
+                    <Breadcrumb
+                        maxItems={10}
+                        separator={<FiChevronRight style={{ transform: "translate(0px,2px)" }} />}
+                    >
+                        {this.state.currentDir.map((pathItem, i) => {
+                            return (
+                                <Breadcrumb.Item
+                                    key={pathItem}
+                                    onClick={() =>
+                                        this.updateDir(arrayUntil(this.state.currentDir, i))
+                                    }
+                                >
+                                    {i === 0 ? this.state.hostname : pathItem}
+                                </Breadcrumb.Item>
+                            );
+                        })}
+                    </Breadcrumb>
+                </div>
+                {this.state.preview ? <Preview fsi={this.state.preview}></Preview> : ""}
+                <FileList
+                    showPreview={this.showPreview}
+                    fileList={this.state.fileList}
+                    updateDir={this.updateDir}
+                ></FileList>
+            </Fragment>
+        );
+    };
 
     render = () => {
         if (this.state.config === null) return <div></div>;
         return (
             <div className="App">
                 <HotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers()}>
-                    <button onClick={() => this.newWindow()}>New Window</button>
-                    <Menu
-                        reload={this.reload}
-                        goUp={this.goUp}
-                        goThroughHistory={this.goThroughHistory}
-                    ></Menu>
-                    <Settings></Settings>
-                    <div className="UrlBar">
-                        <Breadcrumb
-                            maxItems={10}
-                            separator={
-                                <FiChevronRight style={{ transform: "translate(0px,2px)" }} />
-                            }
-                            /*
-                        {
-                            <Icon
-                                path={mdiChevronRight}
-                                size={0.25}
-                                style={{
-                                    margin: "0px 3px",
-                                    transform: "translate(0,0px) scale(2.0) "
-                                }}
-                            />
-                        }
-                        */
-                        >
-                            {this.state.currentDir.map((pathItem, i) => {
-                                return (
-                                    <Breadcrumb.Item
-                                        key={pathItem}
-                                        onClick={() =>
-                                            this.updateDir(arrayUntil(this.state.currentDir, i))
-                                        }
-                                    >
-                                        {i === 0 ? this.state.hostname : pathItem}
-                                    </Breadcrumb.Item>
-                                );
-                            })}
-                        </Breadcrumb>
-                    </div>
-                    {this.state.preview ? <Preview fsi={this.state.preview}></Preview> : ""}
-                    <FileList
-                        showPreview={this.showPreview}
-                        fileList={this.state.fileList}
-                        updateDir={this.updateDir}
-                    ></FileList>
+                    {this.renderPage(this.state.currentPage)}
                 </HotKeys>
             </div>
         );

@@ -16,12 +16,20 @@ body {
     cursor: default;
 }
 
+a {
+    text-decoration: none !important;
+}
+
 * {
     /*outline: 1px solid red;*/
     box-sizing: border-box;
     /*-webkit-user-select: none;*/
-    -webkit-user-drag: none;
     outline: none;
+    /*-webkit-user-drag: none;*/
+}
+
+.draggable {
+    -webkit-user-drag: auto;
 }
 
 #root {

@@ -1,3 +1,13 @@
+import { FromSchema } from "json-schema-to-ts";
+import { configSchema } from "./utils/Schema";
+
+export enum Page {
+    config = "config",
+    main = "main"
+}
+
+export type Config = FromSchema<typeof configSchema>;
+
 /**
  *  A file system item like a folder file socket etc.
  */

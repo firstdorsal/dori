@@ -1,13 +1,17 @@
 import { Component } from "react";
-import ChevronRight from "mdi-react/ChevronRightIcon";
-import ChevronLeft from "mdi-react/ChevronLeftIcon";
-import ChevronUp from "mdi-react/ChevronUpIcon";
-import Refresh from "mdi-react/RefreshIcon";
+import ChevronRightIcon from "mdi-react/ChevronRightIcon";
+import ChevronLeftIcon from "mdi-react/ChevronLeftIcon";
+import ChevronUpIcon from "mdi-react/ChevronUpIcon";
+import RefreshIcon from "mdi-react/RefreshIcon";
+import GearIcon from "mdi-react/GearIcon";
+
+import { Page } from "../../types";
 
 interface MenuProps {
-    goUp: Function;
-    reload: Function;
-    goThroughHistory: Function;
+    readonly goUp: Function;
+    readonly reload: Function;
+    readonly goThroughHistory: Function;
+    readonly updatePage: Function;
 }
 interface MenuState {}
 export default class Menu extends Component<MenuProps, MenuState> {
@@ -18,25 +22,31 @@ export default class Menu extends Component<MenuProps, MenuState> {
                     style={{ background: "none", outline: "none" }}
                     onClick={() => this.props.goThroughHistory("back")}
                 >
-                    <ChevronLeft></ChevronLeft>
+                    <ChevronLeftIcon />
                 </button>
                 <button
                     style={{ background: "none", outline: "none" }}
                     onClick={() => this.props.goThroughHistory("forward")}
                 >
-                    <ChevronRight></ChevronRight>
+                    <ChevronRightIcon />
                 </button>
                 <button
                     style={{ background: "none", outline: "none" }}
                     onClick={() => this.props.goUp()}
                 >
-                    <ChevronUp></ChevronUp>
+                    <ChevronUpIcon />
                 </button>
                 <button
                     style={{ background: "none", outline: "none" }}
                     onClick={() => this.props.reload()}
                 >
-                    <Refresh></Refresh>
+                    <RefreshIcon />
+                </button>
+                <button
+                    style={{ background: "none", outline: "none" }}
+                    onClick={() => this.props.updatePage(Page.config)}
+                >
+                    <GearIcon />
                 </button>
             </div>
         );

@@ -1,21 +1,21 @@
 import { FromSchema } from "json-schema-to-ts";
 import mime from "mime";
-import { configSchema } from "../components/config/Schema";
-import { FsItem, FsType } from "../types";
+import { configSchema } from "./Schema";
+import { Config, FsItem, FsType } from "../types";
 
-export const getLast = <T,>(a: Array<T>) => {
+export const getLast = <T>(a: Array<T>) => {
     return a[a.length - 1];
 };
 
-export const arrayUntil = <T,>(a: Array<T>, until: number) => {
+export const arrayUntil = <T>(a: Array<T>, until: number) => {
     return arrayRange(a, 0, until);
 };
 
-export const arrayFrom = <T,>(a: Array<T>, from: number) => {
+export const arrayFrom = <T>(a: Array<T>, from: number) => {
     return arrayRange(a, from, a.length);
 };
 
-export const arrayRange = <T,>(a: Array<T>, from: number, until: number) => {
+export const arrayRange = <T>(a: Array<T>, from: number, until: number) => {
     return a.filter((e, i) => i <= Math.max(until, 0) && i >= from);
 };
 
@@ -34,11 +34,13 @@ export const pathToArray = (path: string) => {
     return a;
 };
 
-export const getFileType = (fsi: FsItem) => {
-    mime.define(typeMap, true);
-    let type = mime.getType(arrayToPath(fsi.path));
-    console.log(type);
+export const getFileTypeFromFsItem = (fsi: FsItem) => {
+    return getFileTypeFromString(arrayToPath(fsi.path));
+};
 
+export const getFileTypeFromString = (path: string) => {
+    mime.define(typeMap, true);
+    let type = mime.getType(path);
     return type;
 };
 
@@ -54,7 +56,6 @@ export const isTextType = (type: string) => {
 /**
  * Supported Display Mime Types
  */
-
 export const sdmt = {
     nativeImages: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
     polyfilledImages: ["image/avif"],
@@ -64,13 +65,21 @@ export const sdmt = {
 };
 export const typeMap: mime.TypeMap = { "text/typescript": ["ts"], "text/typescript+xml": ["tsx"] };
 
-export const getHotkeys = (config: FromSchema<typeof configSchema>) => {
+export const getHotkeys = (config: Config) => {
     const keyMap = {};
 
     if (config === null || config.hotkeys?.useHotkeys === false) return keyMap;
-    config.hotkeys?.list.forEach(element => {
-        /*@ts-ignore*/
-        keyMap[element.action] = element.keys;
-    });
-    return keyMap;
+
+    return config.hotkeys.keyMap;
 };
+
+export const actions = ["NEW_WINDOW"] as const;
+
+export const defaultConfig: Config = {
+    hotkeys: {
+        useHotkeys: true,
+        keyMap: {
+            NEW_WINDOW: "ctrl+n"
+        }
+    }
+} as const;

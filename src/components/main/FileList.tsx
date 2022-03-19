@@ -5,9 +5,9 @@ import FileListRow from "./FileListRow";
 import { arrayToPath } from "../../utils/utils";
 
 interface FileListProps {
-    fileList: FsItem[];
-    updateDir: Function;
-    showPreview: Function;
+    readonly fileList: FsItem[];
+    readonly updateDir: Function;
+    readonly showPreview: Function;
 }
 interface FileListState {}
 export default class FileList extends Component<FileListProps, FileListState> {
