@@ -11,13 +11,13 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-size: 18px;
-    -webkit-user-select: none;
     user-select: none;
     cursor: default;
 }
 
 a {
     text-decoration: none !important;
+    cursor: pointer;
 }
 
 * {
@@ -26,10 +26,6 @@ a {
     /*-webkit-user-select: none;*/
     outline: none;
     /*-webkit-user-drag: none;*/
-}
-
-.draggable {
-    -webkit-user-drag: auto;
 }
 
 #root {

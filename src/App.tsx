@@ -15,9 +15,10 @@ import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
 
-import { configSchema } from "./utils/configSchema";
 import ConfigComponent from "./components/config/Config";
 import FsItemComponent, { FsItemComponentStyle } from "./components/common/FsItemComponent";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 interface AppProps {}
 interface AppState {
@@ -175,6 +176,14 @@ export class App extends Component<AppProps, AppState> {
         }
     };
 
+    updateFsItem = (newItem: FsItem, index: number) => {
+        this.setState(({ fileList }) => {
+            fileList[index] = newItem;
+
+            return { fileList };
+        });
+    };
+
     renderMain = () => {
         return (
             <Fragment>
@@ -194,6 +203,7 @@ export class App extends Component<AppProps, AppState> {
                         {this.state.currentDir.map((pathItem, i) => {
                             return (
                                 <FsItemComponent
+                                    key={pathItem}
                                     itemStyle={FsItemComponentStyle.breadcrumb}
                                     updateDir={this.updateDir}
                                     showPreview={this.showPreview}
@@ -213,6 +223,7 @@ export class App extends Component<AppProps, AppState> {
                     showPreview={this.showPreview}
                     fileList={this.state.fileList}
                     updateDir={this.updateDir}
+                    updateFsItem={this.updateFsItem}
                 ></FileList>
             </Fragment>
         );
@@ -223,7 +234,9 @@ export class App extends Component<AppProps, AppState> {
         return (
             <div className="App">
                 <HotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers()}>
-                    {this.renderPage(this.state.currentPage)}
+                    <DndProvider backend={HTML5Backend}>
+                        {this.renderPage(this.state.currentPage)}
+                    </DndProvider>
                 </HotKeys>
             </div>
         );

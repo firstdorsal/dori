@@ -12,6 +12,9 @@ export type Config = FromSchema<typeof configSchema>;
  *  A file system item like a folder file socket etc.
  */
 export interface FsItem {
+    ui?: {
+        selected?: boolean;
+    };
     path: string[];
     fs_type?: FsType;
     permission?: Permission;

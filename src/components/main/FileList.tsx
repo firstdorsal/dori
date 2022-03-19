@@ -1,6 +1,5 @@
 import { Component } from "react";
 import { FsItem } from "../../types";
-import { getLast, isHidden } from "../../utils/utils";
 import FileListRow from "./FileListRow";
 import { arrayToPath } from "../../utils/utils";
 
@@ -8,6 +7,7 @@ interface FileListProps {
     readonly fileList: FsItem[];
     readonly updateDir: Function;
     readonly showPreview: Function;
+    readonly updateFsItem: Function;
 }
 interface FileListState {}
 export default class FileList extends Component<FileListProps, FileListState> {
@@ -17,11 +17,13 @@ export default class FileList extends Component<FileListProps, FileListState> {
                 {this.props.fileList.map((fsi, i) => {
                     return (
                         <FileListRow
+                            listIndex={i}
+                            updateFsItem={this.props.updateFsItem}
                             key={arrayToPath(fsi.path)}
                             showPreview={this.props.showPreview}
                             updateDir={this.props.updateDir}
                             fsItem={fsi}
-                        ></FileListRow>
+                        />
                     );
                 })}
             </div>

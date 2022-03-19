@@ -1,7 +1,5 @@
-import { FromSchema } from "json-schema-to-ts";
 import mime from "mime";
-import { configSchema } from "./configSchema";
-import { Config, FsItem, FsType } from "../types";
+import { Config, FsItem } from "../types";
 
 export const getLast = <T>(a: Array<T>) => {
     return a[a.length - 1];
