@@ -2,8 +2,8 @@ import { Component, CSSProperties, PureComponent } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
 import { App } from "../../App";
-import { FsItem, UpdateFsItemOption } from "../../types";
-import { arrayToPath, arrayUntil, getLast, isHidden } from "../../utils/utils";
+import { FsItem, FsType, UpdateFsItemOption } from "../../types";
+import { arrayToPath, arrayUntil, defaultFsItem, getLast, isHiddenPath } from "../../utils/utils";
 
 export enum FsItemComponentStyle {
     breadcrumb = "breadcrumb",
@@ -38,7 +38,13 @@ export default class FsItemComponent extends PureComponent<
         return (
             <Breadcrumb.Item
                 key={bc.pathItem}
-                onClick={() => this.props.updateDir(arrayUntil(bc.currentDir, bc.i))}
+                onClick={() =>
+                    this.props.updateDir({
+                        ...defaultFsItem,
+                        path: arrayUntil(bc.currentDir, bc.i),
+                        fs_type: FsType.Directory
+                    })
+                }
             >
                 {bc.i === 0 ? bc.hostname : bc.pathItem}
             </Breadcrumb.Item>
@@ -107,7 +113,7 @@ const ListItem = (props: {
     const p = arrayToPath(fsi.path);
 
     const innerStyle: CSSProperties = {};
-    innerStyle.color = isHidden(fsi.path) ? "lightgrey" : "black";
+    innerStyle.color = isHiddenPath(fsi.path) ? "lightgrey" : "black";
     const upperStyle: CSSProperties = {};
     if (props.fsItem.ui?.selected === true) {
         upperStyle.background = "#0162e0";
@@ -147,7 +153,7 @@ const ListItem = (props: {
                 ref={drag}
                 id={p}
                 onDoubleClick={() => {
-                    if (fsi.fs_type !== "-") return props.updateDir(fsi.path);
+                    if (fsi.fs_type !== "-") return props.updateDir(fsi);
                     props.showPreview(fsi);
                 }}
                 onClick={() => props.updateFsItem(props.listIndex, UpdateFsItemOption.Selected)}

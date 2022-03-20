@@ -42,6 +42,9 @@ export const configSchema = {
                         },
                         SELECT_MULTIPLE: {
                             type: "string"
+                        },
+                        TOGGLE_HIDDEN_FILES: {
+                            type: "string"
                         }
                     }
                 }

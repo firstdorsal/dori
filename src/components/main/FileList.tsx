@@ -1,4 +1,4 @@
-import { Component, PureComponent } from "react";
+import { PureComponent } from "react";
 import { FsItem } from "../../types";
 import FileListRow from "./FileListRow";
 import { arrayToPath } from "../../utils/utils";
@@ -16,8 +16,9 @@ export default class FileList extends PureComponent<FileListProps, FileListState
         if (this.props.fileList === undefined) return <div></div>;
         return (
             <div className="FileList">
-                {this.props.fileList.map((fsi, i) => {
-                    return (
+                {this.props.fileList.flatMap((fsi, i) => {
+                    if (fsi.ui.display === false) return [];
+                    return [
                         <FileListRow
                             listIndex={i}
                             updateFsItem={this.props.updateFsItem}
@@ -26,7 +27,7 @@ export default class FileList extends PureComponent<FileListProps, FileListState
                             updateDir={this.props.updateDir}
                             fsItem={fsi}
                         />
-                    );
+                    ];
                 })}
             </div>
         );

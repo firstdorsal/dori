@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api";
+import { clone, cloneDeep } from "lodash";
 import mime from "mime";
 import { Config, FileListMap, FsItem, FsType } from "../types";
 
@@ -18,7 +19,7 @@ export const arrayRange = <T>(a: Array<T>, from: number, until: number) => {
     return a.filter((e, i) => i <= Math.max(until, 0) && i >= from);
 };
 
-export const isHidden = (path: string[]) => {
+export const isHiddenPath = (path: string[]) => {
     return getLast(path).startsWith(".");
 };
 
@@ -80,20 +81,22 @@ export const actions = [
     "GO_UP",
     "GO_INTO",
     "SELECT_FROM_TO",
-    "SELECT_MULTIPLE"
+    "SELECT_MULTIPLE",
+    "TOGGLE_HIDDEN_FILES"
 ] as const;
 
 export const defaultConfig: Config = {
     hotkeys: {
         useHotkeys: true,
         keyMap: {
-            NEW_WINDOW: "control+n",
+            NEW_WINDOW: "ctrl+n",
             LIST_UP: "up",
             LIST_DOWN: "down",
             GO_UP: "left",
             GO_INTO: "right",
             SELECT_FROM_TO: "shift",
-            SELECT_MULTIPLE: "control"
+            SELECT_MULTIPLE: "ctrl",
+            TOGGLE_HIDDEN_FILES: "ctrl+h"
         }
     }
 } as const;
@@ -110,26 +113,38 @@ export const countSelected = (items: FsItem[]) => {
     return [l.length, firstItemIndex];
 };
 
-export const readDir = async (newPath: string): Promise<FsItem[]> => {
+export const readDir = async (fsi: FsItem): Promise<FsItem[] | false> => {
+    if (fsi.fs_type !== FsType.Directory) return false;
     const fileList: { path: string[]; fs_type: FsType }[] = await invoke("read_dir", {
-        path: newPath
+        path: arrayToPath(fsi.path)
     });
 
     return fileList.map(file => {
         return {
-            ui: {
-                selected: false
-            },
+            ...cloneDeep(defaultFsItem),
             path: file.path,
-            fs_type: file.fs_type,
-            permission: { user: -1, group: -1, other: -1 },
-            owner: { gid: -1, uid: -1 },
-            modificationDate: "",
-            mimeType: ""
+            fs_type: file.fs_type
         };
     });
 };
 
+export const defaultFsItem = {
+    ui: {
+        selected: false,
+        display: true
+    },
+    path: "",
+    fs_type: "",
+    permission: { user: -1, group: -1, other: -1 },
+    owner: { gid: -1, uid: -1 },
+    modificationDate: "",
+    mimeType: ""
+};
+
 export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string[]) => {
     return fileListMap[arrayToPath(currentPath)];
+};
+
+export const mergeFileLists = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {
+    return currentFileList;
 };

@@ -1,22 +1,21 @@
-import { Component, Fragment } from "react";
+import { Component } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
     arrayToPath,
     arrayUntil,
     countSelected,
     defaultConfig,
+    defaultFsItem,
     getCurrentFileList,
     getHotkeys,
+    isHiddenPath,
+    mergeFileLists as getMergedFileList,
     readDir
 } from "./utils/utils";
-import Breadcrumb from "rsuite/Breadcrumb";
 import "rsuite/dist/rsuite.min.css";
-import { Config, FileListMap, FsItem, Page, UpdateFsItemOption } from "./types";
+import { Config, FileListMap, FsItem, FsType, Page, UpdateFsItemOption } from "./types";
 
-import FileList from "./components/main/FileList";
-import Menu from "./components/menu/Menu";
-import Preview from "./components/preview/Preview";
-import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
+import { WebviewWindow } from "@tauri-apps/api/window";
 import { sortItems } from "./utils/sort";
 import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
@@ -25,7 +24,6 @@ import { path } from "@tauri-apps/api";
 import ConfigComponent from "./components/config/Config";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import UrlBar from "./components/menu/UrlBar";
 import { Main } from "./components/main/Main";
 
 interface AppProps {}
@@ -38,38 +36,59 @@ interface AppState {
     readonly preview: null | FsItem;
     readonly config: Config | null;
     readonly currentPage: Page;
+    readonly displayHiddenFiles: boolean;
 }
 
 export class App extends Component<AppProps, AppState> {
     state = {
         fileListMap: {},
-        currentDir: ["/", "home", "paul", "Downloads"],
+        currentDir: ["/", "home", "paul", "Downloads", "rpi-alarm"],
         hostname: "",
         history: [],
         historyIndex: -1,
         preview: null,
         config: null,
-        currentPage: Page.main
+        currentPage: Page.main,
+        displayHiddenFiles: true
     };
 
-    updateDir = async (fullDir: string[], pushHistory = true, newIndex?: number) => {
-        const newDirPath = arrayToPath(fullDir);
+    updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
+        const newDirPath = arrayToPath(fsi.path);
 
-        const newFileList = await readDir(newDirPath);
+        const newFileList = await readDir(fsi);
+        console.log(newFileList);
 
-        this.setState(({ history, historyIndex }) => {
+        if (newFileList === false) return;
+
+        this.setState(({ history, historyIndex, fileListMap }) => {
             if (pushHistory === true) {
                 historyIndex++;
-                history = [...arrayUntil(history, historyIndex - 1), fullDir];
+                history = [...arrayUntil(history, historyIndex - 1), fsi.path];
             }
 
             if (newIndex !== undefined) {
                 historyIndex = newIndex;
             }
 
+            // merge the updated list with the saved list
+            // updates the items that have changed in the fs but keeps
+            // the state
+            const currentFileList = fileListMap[newDirPath];
+            let mergedFileList = currentFileList;
+            if (mergedFileList === undefined) {
+                mergedFileList = newFileList;
+            } else {
+                mergedFileList = getMergedFileList(currentFileList, newFileList);
+            }
+
+            fileListMap[newDirPath] = sortItems(mergedFileList, "alphabetic");
+            const [length, firstItemIndex] = countSelected(fileListMap[newDirPath]);
+            if (length === 0) {
+                fileListMap[newDirPath][0].ui.selected = true;
+            }
             return {
-                fileListMap: { [newDirPath]: sortItems(newFileList, "alphabetic") },
-                currentDir: fullDir,
+                fileListMap,
+                currentDir: fsi.path,
                 history,
                 historyIndex
             };
@@ -80,15 +99,30 @@ export class App extends Component<AppProps, AppState> {
         const hostname: string = await invoke("get_hostname");
         const config = await this.loadConfig();
         this.setState({ hostname, config });
-        await this.updateDir(this.state.currentDir);
+        await this.updateDir({
+            ...defaultFsItem,
+            path: this.state.currentDir,
+            fs_type: FsType.Directory
+        });
     };
 
     goUpDirectory = () => {
-        this.updateDir(arrayUntil(this.state.currentDir, this.state.currentDir.length - 2));
+        this.updateDir({
+            ...defaultFsItem,
+            path: arrayUntil(this.state.currentDir, this.state.currentDir.length - 2),
+            fs_type: FsType.Directory
+        });
     };
 
-    reloadDirectory = () => {
-        this.updateDir(this.state.currentDir, false);
+    reloadDirectory = async () => {
+        await this.updateDir(
+            {
+                ...defaultFsItem,
+                path: this.state.currentDir,
+                fs_type: FsType.Directory
+            },
+            false
+        );
     };
 
     goThroughHistory = (direction: "back" | "forward") => {
@@ -123,11 +157,12 @@ export class App extends Component<AppProps, AppState> {
             this.newWindow();
         },
         LIST_UP: (e: any) => {
+            e.preventDefault();
+
             const currentFileList = getCurrentFileList(
                 this.state.fileListMap,
                 this.state.currentDir
             );
-            e.preventDefault();
             const [length, firstItemIndex] = countSelected(currentFileList);
             if (length === 0) {
                 return this.updateFsItems(currentFileList.length - 1, UpdateFsItemOption.Selected);
@@ -140,12 +175,13 @@ export class App extends Component<AppProps, AppState> {
             }
         },
         LIST_DOWN: (e: any) => {
+            e.preventDefault();
+
             const currentFileList = getCurrentFileList(
                 this.state.fileListMap,
                 this.state.currentDir
             );
 
-            e.preventDefault();
             const [length, firstItemIndex] = countSelected(currentFileList);
             if (length === 0) {
                 return this.updateFsItems(0, UpdateFsItemOption.Selected);
@@ -167,11 +203,29 @@ export class App extends Component<AppProps, AppState> {
             );
             const [length, firstItemIndex] = countSelected(currentFileList);
             if (length === 1) {
-                return this.updateDir(currentFileList[firstItemIndex].path);
+                return this.updateDir(currentFileList[firstItemIndex]);
             }
         },
         SELECT_FROM_TO: () => {},
-        SELECT_MULTIPLE: () => {}
+        SELECT_MULTIPLE: () => {},
+        TOGGLE_HIDDEN_FILES: () => {
+            this.toggleHiddenFiles();
+        }
+    };
+
+    toggleHiddenFiles = () => {
+        this.setState(({ fileListMap, currentDir, displayHiddenFiles }) => {
+            const currentFileList = getCurrentFileList(fileListMap, currentDir);
+            fileListMap[arrayToPath(currentDir)] = currentFileList.map(fsi => {
+                const isHidden = isHiddenPath(fsi.path);
+                if (isHidden) {
+                    return { ...fsi, ui: { ...fsi.ui, display: !displayHiddenFiles } };
+                }
+                return fsi;
+            });
+
+            return { fileListMap, displayHiddenFiles: !displayHiddenFiles };
+        });
     };
 
     writeConfig = async (configToWrite: Config, configPath: string) => {

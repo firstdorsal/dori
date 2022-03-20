@@ -8,7 +8,7 @@ export enum Page {
 
 export type Config = FromSchema<typeof configSchema>;
 
-export type FileListMap = { [path: string]: FsItem[] };
+export type FileListMap = { [p: string]: FsItem[] };
 
 /**
  *  A file system item like a folder file socket etc.
@@ -16,6 +16,7 @@ export type FileListMap = { [path: string]: FsItem[] };
 export interface FsItem {
     ui: {
         selected: boolean;
+        display: boolean;
     };
     path: string[];
     fs_type: FsType;
