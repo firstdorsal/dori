@@ -5,6 +5,8 @@ import { configSchema } from "../../utils/configSchema";
 import { Config, Page } from "../../types";
 import { defaultConfig } from "../../utils/utils";
 import { App } from "../../App";
+import CloseIcon from "mdi-react/CloseIcon";
+import ReloadAlertIcon from "mdi-react/ReloadAlertIcon";
 
 interface ConfigComponentProps {
     readonly updateConfig: InstanceType<typeof App>["updateConfig"];
@@ -19,8 +21,21 @@ export default class ConfigComponent extends PureComponent<
     render = () => {
         return (
             <div className="ConfigComponent">
-                <button onClick={() => this.props.updateConfig(defaultConfig)}>Reset Config</button>
-                <button onClick={() => this.props.updatePage(Page.main)}>Back</button>
+                <button
+                    style={{ background: "none", outline: "none" }}
+                    onClick={() => this.props.updateConfig(defaultConfig)}
+                    title="Reset to default"
+                >
+                    <ReloadAlertIcon />
+                </button>
+                <button
+                    style={{ background: "none", outline: "none", float: "right" }}
+                    onClick={() => this.props.updatePage(Page.main)}
+                    title="Close"
+                >
+                    <CloseIcon />
+                </button>
+
                 <Form
                     schema={configSchema as unknown as JSONSchema7}
                     formData={this.props.config}

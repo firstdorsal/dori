@@ -116,7 +116,7 @@ const ListItem = (props: {
     innerStyle.color = isHiddenPath(fsi.path) ? "lightgrey" : "black";
     const upperStyle: CSSProperties = {};
     if (props.fsItem.ui?.selected === true) {
-        upperStyle.background = "#0162e0";
+        upperStyle.background = "#0c6eed";
         innerStyle.color = "white";
     }
 

@@ -23,28 +23,29 @@ export const Main = (props: {
     readonly showPreview: InstanceType<typeof App>["showPreview"];
 }) => {
     return (
-        <Fragment>
-            <button onClick={() => props.newWindow()}>New Window</button>
-            <Menu
-                reloadDirectory={props.reloadDirectory}
-                goUpDirectory={props.goUpDirectory}
-                goThroughHistory={props.goThroughHistory}
-                updatePage={props.updatePage}
-            ></Menu>
-            <UrlBar
-                currentDir={props.currentDir}
-                hostname={props.hostname}
-                showPreview={props.showPreview}
-                updateDir={props.updateDir}
-            />
+        <main className="Main">
+            <div>
+                <Menu
+                    reloadDirectory={props.reloadDirectory}
+                    goUpDirectory={props.goUpDirectory}
+                    goThroughHistory={props.goThroughHistory}
+                    updatePage={props.updatePage}
+                ></Menu>
+                <UrlBar
+                    currentDir={props.currentDir}
+                    hostname={props.hostname}
+                    showPreview={props.showPreview}
+                    updateDir={props.updateDir}
+                />
 
-            {props.preview ? <Preview fsi={props.preview}></Preview> : ""}
-            <FileList
-                showPreview={props.showPreview}
-                fileList={props.fileList}
-                updateDir={props.updateDir}
-                updateFsItem={props.updateFsItem}
-            ></FileList>
-        </Fragment>
+                {props.preview ? <Preview fsi={props.preview}></Preview> : ""}
+                <FileList
+                    showPreview={props.showPreview}
+                    fileList={props.fileList}
+                    updateDir={props.updateDir}
+                    updateFsItem={props.updateFsItem}
+                ></FileList>
+            </div>
+        </main>
     );
 };

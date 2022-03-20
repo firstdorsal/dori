@@ -13,6 +13,7 @@ body {
     font-size: 18px;
     user-select: none;
     cursor: default;
+    overflow: hidden;
 }
 
 a {
@@ -135,4 +136,73 @@ form.rjsf {
     span.required {
         display: none;
     }
+}
+
+.Aside {
+    height: 100%;
+    margin: 0px;
+    background: #e6e6e686;
+}
+
+.Main {
+    height: 100%;
+}
+
+.react-draggable {
+    height: 100%;
+    width: 100%;
+}
+
+.split {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.gutter {
+    margin-right: -2.5px;
+    margin-left: -2.5px;
+    z-index: 2;
+}
+
+.gutter::after {
+    content: "";
+    transition: 0s background-color;
+}
+
+.gutter:hover::after,
+.gutter:active::after {
+    width: 2.5px;
+    height: 100%;
+    display: block;
+    content: "";
+    z-index: 3;
+    background-color: #0c6eedb2;
+    transition-delay: 0.5s;
+}
+
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+}
+
+main > div {
+    width: calc(100% + 5px);
+}
+
+.Menu {
+    height: 35px;
+}
+
+.UrlBar {
+    height: 30px;
+    padding-left: 10px;
+}
+
+.FileList {
+    overflow: scroll;
+    height: calc(100vh - 65px);
+}
+
+.FileListRowItem div {
+    margin-left: 7px;
 }

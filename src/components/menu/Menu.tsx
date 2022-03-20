@@ -44,7 +44,7 @@ export default class Menu extends Component<MenuProps, MenuState> {
                     <RefreshIcon />
                 </button>
                 <button
-                    style={{ background: "none", outline: "none" }}
+                    style={{ background: "none", outline: "none", float: "right" }}
                     onClick={() => this.props.updatePage(Page.config)}
                 >
                     <GearIcon />

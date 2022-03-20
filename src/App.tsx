@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { Component, Fragment } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
     arrayToPath,
@@ -25,6 +25,8 @@ import ConfigComponent from "./components/config/Config";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Main } from "./components/main/Main";
+import Aside from "./components/aside/Aside";
+import Split from "react-split";
 
 interface AppProps {}
 interface AppState {
@@ -37,6 +39,7 @@ interface AppState {
     readonly config: Config | null;
     readonly currentPage: Page;
     readonly displayHiddenFiles: boolean;
+    readonly asideWidth: number;
 }
 
 export class App extends Component<AppProps, AppState> {
@@ -49,7 +52,8 @@ export class App extends Component<AppProps, AppState> {
         preview: null,
         config: null,
         currentPage: Page.main,
-        displayHiddenFiles: true
+        displayHiddenFiles: true,
+        asideWidth: 100
     };
 
     updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
@@ -164,9 +168,11 @@ export class App extends Component<AppProps, AppState> {
                 this.state.currentDir
             );
             const [length, firstItemIndex] = countSelected(currentFileList);
+
             if (length === 0) {
                 return this.updateFsItems(currentFileList.length - 1, UpdateFsItemOption.Selected);
             }
+
             if (length === 1) {
                 return this.updateFsItems(
                     firstItemIndex === 0 ? currentFileList.length - 1 : firstItemIndex - 1,
@@ -278,20 +284,35 @@ export class App extends Component<AppProps, AppState> {
             }
             case "main": {
                 return (
-                    <Main
-                        newWindow={this.newWindow}
-                        reloadDirectory={this.reloadDirectory}
-                        goUpDirectory={this.goUpDirectory}
-                        goThroughHistory={this.goThroughHistory}
-                        updatePage={this.updatePage}
-                        updateDir={this.updateDir}
-                        showPreview={this.showPreview}
-                        updateFsItem={this.updateFsItems}
-                        currentDir={this.state.currentDir}
-                        hostname={this.state.hostname}
-                        preview={this.state.preview}
-                        fileList={getCurrentFileList(this.state.fileListMap, this.state.currentDir)}
-                    />
+                    <Fragment>
+                        <Split
+                            className="split"
+                            sizes={[10, 90]}
+                            minSize={100}
+                            gutterSize={5}
+                            snapOffset={0}
+                        >
+                            <Aside></Aside>
+
+                            <Main
+                                newWindow={this.newWindow}
+                                reloadDirectory={this.reloadDirectory}
+                                goUpDirectory={this.goUpDirectory}
+                                goThroughHistory={this.goThroughHistory}
+                                updatePage={this.updatePage}
+                                updateDir={this.updateDir}
+                                showPreview={this.showPreview}
+                                updateFsItem={this.updateFsItems}
+                                currentDir={this.state.currentDir}
+                                hostname={this.state.hostname}
+                                preview={this.state.preview}
+                                fileList={getCurrentFileList(
+                                    this.state.fileListMap,
+                                    this.state.currentDir
+                                )}
+                            />
+                        </Split>
+                    </Fragment>
                 );
             }
             default: {
