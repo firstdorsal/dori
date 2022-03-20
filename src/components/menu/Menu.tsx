@@ -6,12 +6,13 @@ import RefreshIcon from "mdi-react/RefreshIcon";
 import GearIcon from "mdi-react/GearIcon";
 
 import { Page } from "../../types";
+import { App } from "../../App";
 
 interface MenuProps {
-    readonly goUp: Function;
-    readonly reload: Function;
-    readonly goThroughHistory: Function;
-    readonly updatePage: Function;
+    readonly goUpDirectory: InstanceType<typeof App>["goUpDirectory"];
+    readonly reloadDirectory: InstanceType<typeof App>["reloadDirectory"];
+    readonly goThroughHistory: InstanceType<typeof App>["goThroughHistory"];
+    readonly updatePage: InstanceType<typeof App>["updatePage"];
 }
 interface MenuState {}
 export default class Menu extends Component<MenuProps, MenuState> {
@@ -32,13 +33,13 @@ export default class Menu extends Component<MenuProps, MenuState> {
                 </button>
                 <button
                     style={{ background: "none", outline: "none" }}
-                    onClick={() => this.props.goUp()}
+                    onClick={() => this.props.goUpDirectory()}
                 >
                     <ChevronUpIcon />
                 </button>
                 <button
                     style={{ background: "none", outline: "none" }}
-                    onClick={() => this.props.reload()}
+                    onClick={() => this.props.reloadDirectory()}
                 >
                     <RefreshIcon />
                 </button>

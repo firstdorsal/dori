@@ -1,7 +1,8 @@
-import { Component, CSSProperties } from "react";
+import { Component, CSSProperties, PureComponent } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
-import { FsItem } from "../../types";
+import { App } from "../../App";
+import { FsItem, UpdateFsItemOption } from "../../types";
 import { arrayToPath, arrayUntil, getLast, isHidden } from "../../utils/utils";
 
 export enum FsItemComponentStyle {
@@ -18,18 +19,21 @@ export interface BreadcrumbInfo {
 
 interface FsItemComponentProps {
     readonly fsItem?: FsItem;
-    readonly updateDir: Function;
-    readonly showPreview: Function;
+    readonly updateDir: InstanceType<typeof App>["updateDir"];
+    readonly showPreview: InstanceType<typeof App>["showPreview"];
     readonly itemStyle?: FsItemComponentStyle;
     readonly breadcrumbInfo?: BreadcrumbInfo;
-    readonly updateFsItem?: Function;
+    readonly updateFsItem?: InstanceType<typeof App>["updateFsItems"];
     readonly listIndex?: number;
 }
 interface FsItemComponentState {}
 
-export default class FsItemComponent extends Component<FsItemComponentProps, FsItemComponentState> {
+export default class FsItemComponent extends PureComponent<
+    FsItemComponentProps,
+    FsItemComponentState
+> {
     renderBreadcrumbItem = () => {
-        if (!this.props.breadcrumbInfo) throw Error("Missing breadcruminfo");
+        if (this.props.breadcrumbInfo === undefined) throw Error("Missing breadcruminfo");
         const bc = this.props.breadcrumbInfo;
         return (
             <Breadcrumb.Item
@@ -92,18 +96,23 @@ Folders cannot be dragged onto themselves
 
 const ListItem = (props: {
     fsItem?: FsItem;
-    updateFsItem: Function;
-    updateDir: Function;
-    showPreview: Function;
+    updateFsItem: InstanceType<typeof App>["updateFsItems"];
+    updateDir: InstanceType<typeof App>["updateDir"];
+    showPreview: InstanceType<typeof App>["showPreview"];
     listIndex: number;
 }) => {
-    if (!props.fsItem) throw Error("Missing fsItem");
+    if (props.fsItem === undefined) throw Error("Missing fsItem");
 
     const fsi = props.fsItem;
-    const style: CSSProperties = {};
-    style.color = isHidden(fsi.path) ? "lightgrey" : "black";
-    style.background = fsi.fs_type === "d" ? "orange" : undefined;
     const p = arrayToPath(fsi.path);
+
+    const innerStyle: CSSProperties = {};
+    innerStyle.color = isHidden(fsi.path) ? "lightgrey" : "black";
+    const upperStyle: CSSProperties = {};
+    if (props.fsItem.ui?.selected === true) {
+        upperStyle.background = "#0162e0";
+        innerStyle.color = "white";
+    }
 
     interface DropResult {
         path: string;
@@ -133,23 +142,19 @@ const ListItem = (props: {
     }));
 
     return (
-        <span
-            className="FileListRowItem"
-            style={{ background: props.fsItem.ui?.selected ? "background: #0162e0" : undefined }}
-            ref={drop}
-        >
-            <span
+        <div className="FileListRowItem" style={upperStyle} ref={drop}>
+            <div
                 ref={drag}
                 id={p}
                 onDoubleClick={() => {
                     if (fsi.fs_type !== "-") return props.updateDir(fsi.path);
                     props.showPreview(fsi);
                 }}
-                onClick={() => props.updateFsItem(props.fsItem, props.listIndex)}
-                style={style}
+                onClick={() => props.updateFsItem(props.listIndex, UpdateFsItemOption.Selected)}
+                style={innerStyle}
             >
                 {getLast(fsi.path)}
-            </span>
-        </span>
+            </div>
+        </div>
     );
 };

@@ -24,6 +24,24 @@ export const configSchema = {
                     properties: {
                         NEW_WINDOW: {
                             type: "string"
+                        },
+                        LIST_UP: {
+                            type: "string"
+                        },
+                        LIST_DOWN: {
+                            type: "string"
+                        },
+                        GO_UP: {
+                            type: "string"
+                        },
+                        GO_INTO: {
+                            type: "string"
+                        },
+                        SELECT_FROM_TO: {
+                            type: "string"
+                        },
+                        SELECT_MULTIPLE: {
+                            type: "string"
                         }
                     }
                 }

@@ -1,5 +1,6 @@
+import { invoke } from "@tauri-apps/api";
 import mime from "mime";
-import { Config, FsItem } from "../types";
+import { Config, FileListMap, FsItem, FsType } from "../types";
 
 export const getLast = <T>(a: Array<T>) => {
     return a[a.length - 1];
@@ -72,13 +73,63 @@ export const getHotkeys = (config: Config) => {
     return config.hotkeys.keyMap;
 };
 
-export const actions = ["NEW_WINDOW"] as const;
+export const actions = [
+    "NEW_WINDOW",
+    "LIST_UP",
+    "LIST_DOWN",
+    "GO_UP",
+    "GO_INTO",
+    "SELECT_FROM_TO",
+    "SELECT_MULTIPLE"
+] as const;
 
 export const defaultConfig: Config = {
     hotkeys: {
         useHotkeys: true,
         keyMap: {
-            NEW_WINDOW: "ctrl+n"
+            NEW_WINDOW: "control+n",
+            LIST_UP: "up",
+            LIST_DOWN: "down",
+            GO_UP: "left",
+            GO_INTO: "right",
+            SELECT_FROM_TO: "shift",
+            SELECT_MULTIPLE: "control"
         }
     }
 } as const;
+
+export const countSelected = (items: FsItem[]) => {
+    let firstItemIndex = -1;
+    const l = items.filter((item, i) => {
+        if (firstItemIndex === -1 && item.ui.selected === true) {
+            firstItemIndex = i;
+        }
+        return item.ui.selected;
+    });
+
+    return [l.length, firstItemIndex];
+};
+
+export const readDir = async (newPath: string): Promise<FsItem[]> => {
+    const fileList: { path: string[]; fs_type: FsType }[] = await invoke("read_dir", {
+        path: newPath
+    });
+
+    return fileList.map(file => {
+        return {
+            ui: {
+                selected: false
+            },
+            path: file.path,
+            fs_type: file.fs_type,
+            permission: { user: -1, group: -1, other: -1 },
+            owner: { gid: -1, uid: -1 },
+            modificationDate: "",
+            mimeType: ""
+        };
+    });
+};
+
+export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string[]) => {
+    return fileListMap[arrayToPath(currentPath)];
+};

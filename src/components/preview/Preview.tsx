@@ -34,13 +34,13 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
     };
 
     loadFile = async (fsi: FsItem | null) => {
-        if (fsi?.path) {
+        if (fsi?.path !== undefined) {
             const currentPath = arrayToPath(fsi.path);
 
             if (currentPath === this.state.lastPath) return;
 
             const type = getFileTypeFromString(currentPath);
-            if (!type) return;
+            if (type === null) return;
             console.log(isTextType(type));
 
             if (sdmt.pdf.includes(type) || isTextType(type)) {
@@ -98,7 +98,7 @@ const missingPreview = (type: string) => {
 const GetPreview = (props: { fsi: FsItem; file: Data }) => {
     const type = getFileTypeFromFsItem(props.fsi);
 
-    if (!type) return previewFailed();
+    if (type === null) return previewFailed();
     if (sdmt.pdf.includes(type)) {
         if (props.file === null) return previewFailed();
         if (typeof props.file === "string" || props.file === 1) {

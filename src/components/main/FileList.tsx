@@ -1,17 +1,19 @@
-import { Component } from "react";
+import { Component, PureComponent } from "react";
 import { FsItem } from "../../types";
 import FileListRow from "./FileListRow";
 import { arrayToPath } from "../../utils/utils";
+import { App } from "../../App";
 
 interface FileListProps {
     readonly fileList: FsItem[];
-    readonly updateDir: Function;
-    readonly showPreview: Function;
-    readonly updateFsItem: Function;
+    readonly updateDir: InstanceType<typeof App>["updateDir"];
+    readonly showPreview: InstanceType<typeof App>["showPreview"];
+    readonly updateFsItem: InstanceType<typeof App>["updateFsItems"];
 }
 interface FileListState {}
-export default class FileList extends Component<FileListProps, FileListState> {
+export default class FileList extends PureComponent<FileListProps, FileListState> {
     render = () => {
+        if (this.props.fileList === undefined) return <div></div>;
         return (
             <div className="FileList">
                 {this.props.fileList.map((fsi, i) => {

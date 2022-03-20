@@ -8,19 +8,21 @@ export enum Page {
 
 export type Config = FromSchema<typeof configSchema>;
 
+export type FileListMap = { [path: string]: FsItem[] };
+
 /**
  *  A file system item like a folder file socket etc.
  */
 export interface FsItem {
-    ui?: {
-        selected?: boolean;
+    ui: {
+        selected: boolean;
     };
     path: string[];
-    fs_type?: FsType;
-    permission?: Permission;
-    owner?: Owner;
-    modificationDate?: string;
-    mimeType?: string;
+    fs_type: FsType;
+    permission: Permission;
+    owner: Owner;
+    modificationDate: string;
+    mimeType: string;
 }
 
 export interface Owner {
@@ -42,4 +44,8 @@ export enum FsType {
     NamedPipe = "p",
     CharacterDevice = "c",
     BlockDevice = "b"*/
+}
+
+export enum UpdateFsItemOption {
+    Selected = 0
 }
