@@ -18,7 +18,7 @@ export interface FsItem {
         selected: boolean;
         display: boolean;
     };
-    path: string[];
+    path: string;
     fs_type: FsType;
     permission: Permission;
     owner: Owner;

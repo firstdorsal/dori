@@ -22,7 +22,7 @@ export default class FileList extends PureComponent<FileListProps, FileListState
                         <FileListRow
                             listIndex={i}
                             updateFsItem={this.props.updateFsItem}
-                            key={arrayToPath(fsi.path)}
+                            key={fsi.path}
                             showPreview={this.props.showPreview}
                             updateDir={this.props.updateDir}
                             fsItem={fsi}

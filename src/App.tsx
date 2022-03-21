@@ -8,15 +8,17 @@ import {
     defaultFsItem,
     getCurrentFileList,
     getHotkeys,
+    getParentPath,
     isHiddenPath,
     mergeFileLists as getMergedFileList,
+    pathToArray,
     readDir
 } from "./utils/utils";
 import "rsuite/dist/rsuite.min.css";
 import { Config, FileListMap, FsItem, FsType, Page, UpdateFsItemOption } from "./types";
 
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { sortItems } from "./utils/sort";
+import { sortItems, SortMethod } from "./utils/sort";
 import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
@@ -31,9 +33,9 @@ import Split from "react-split";
 interface AppProps {}
 interface AppState {
     readonly fileListMap: FileListMap;
-    readonly currentDir: string[];
+    readonly currentDir: string;
     readonly hostname: string;
-    readonly history: string[][];
+    readonly history: FsItem[];
     readonly historyIndex: number;
     readonly preview: null | FsItem;
     readonly config: Config | null;
@@ -45,7 +47,7 @@ interface AppState {
 export class App extends Component<AppProps, AppState> {
     state = {
         fileListMap: {},
-        currentDir: ["/", "home", "paul", "Downloads", "rpi-alarm"],
+        currentDir: "/home/paul/Downloads/rpi-alarm",
         hostname: "",
         history: [],
         historyIndex: -1,
@@ -57,7 +59,7 @@ export class App extends Component<AppProps, AppState> {
     };
 
     updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
-        const newDirPath = arrayToPath(fsi.path);
+        const newDirPath = fsi.path;
 
         const newFileList = await readDir(fsi);
         console.log(newFileList);
@@ -67,7 +69,7 @@ export class App extends Component<AppProps, AppState> {
         this.setState(({ history, historyIndex, fileListMap }) => {
             if (pushHistory === true) {
                 historyIndex++;
-                history = [...arrayUntil(history, historyIndex - 1), fsi.path];
+                history = [...arrayUntil(history, historyIndex - 1), fsi];
             }
 
             if (newIndex !== undefined) {
@@ -85,7 +87,7 @@ export class App extends Component<AppProps, AppState> {
                 mergedFileList = getMergedFileList(currentFileList, newFileList);
             }
 
-            fileListMap[newDirPath] = sortItems(mergedFileList, "alphabetic");
+            fileListMap[newDirPath] = sortItems(mergedFileList, SortMethod.Alphabetic);
             const [length, firstItemIndex] = countSelected(fileListMap[newDirPath]);
             if (length === 0) {
                 fileListMap[newDirPath][0].ui.selected = true;
@@ -113,7 +115,7 @@ export class App extends Component<AppProps, AppState> {
     goUpDirectory = () => {
         this.updateDir({
             ...defaultFsItem,
-            path: arrayUntil(this.state.currentDir, this.state.currentDir.length - 2),
+            path: getParentPath(this.state.currentDir),
             fs_type: FsType.Directory
         });
     };
@@ -139,6 +141,8 @@ export class App extends Component<AppProps, AppState> {
         } else {
             throw Error(`Invalid history direction: ${direction}`);
         }
+
+        console.log(this.state.history[index]);
 
         this.updateDir(this.state.history[index], false, index);
     };
@@ -222,9 +226,9 @@ export class App extends Component<AppProps, AppState> {
     toggleHiddenFiles = () => {
         this.setState(({ fileListMap, currentDir, displayHiddenFiles }) => {
             const currentFileList = getCurrentFileList(fileListMap, currentDir);
-            fileListMap[arrayToPath(currentDir)] = currentFileList.map(fsi => {
+            fileListMap[currentDir] = currentFileList.map(fsi => {
                 const isHidden = isHiddenPath(fsi.path);
-                if (isHidden) {
+                if (isHidden === true) {
                     return { ...fsi, ui: { ...fsi.ui, display: !displayHiddenFiles } };
                 }
                 return fsi;
@@ -267,6 +271,27 @@ export class App extends Component<AppProps, AppState> {
 
     updatePage = (newPage: Page) => {
         this.setState({ currentPage: newPage });
+    };
+
+    updateFsItems = (index: number, option: UpdateFsItemOption) => {
+        this.setState(({ fileListMap }) => {
+            let currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
+
+            currentFileList = currentFileList.map((fsi, i) => {
+                switch (option) {
+                    case UpdateFsItemOption.Selected: {
+                        if (i === index) return { ...fsi, ui: { ...fsi.ui, selected: true } };
+                        return { ...fsi, ui: { ...fsi.ui, selected: false } };
+                    }
+                    default: {
+                        throw Error("Invalid option for updateFsItem");
+                    }
+                }
+            });
+            fileListMap[this.state.currentDir] = currentFileList;
+
+            return { fileListMap };
+        });
     };
 
     renderPage = (page: Page) => {
@@ -319,27 +344,6 @@ export class App extends Component<AppProps, AppState> {
                 return <div>Error</div>;
             }
         }
-    };
-
-    updateFsItems = (index: number, option: UpdateFsItemOption) => {
-        this.setState(({ fileListMap }) => {
-            let currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
-
-            currentFileList = currentFileList.map((fsi, i) => {
-                switch (option) {
-                    case UpdateFsItemOption.Selected: {
-                        if (i === index) return { ...fsi, ui: { ...fsi.ui, selected: true } };
-                        return { ...fsi, ui: { ...fsi.ui, selected: false } };
-                    }
-                    default: {
-                        throw Error("Invalid option for updateFsItem");
-                    }
-                }
-            });
-            fileListMap[arrayToPath(this.state.currentDir)] = currentFileList;
-
-            return { fileListMap };
-        });
     };
 
     render = () => {

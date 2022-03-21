@@ -35,7 +35,7 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
 
     loadFile = async (fsi: FsItem | null) => {
         if (fsi?.path !== undefined) {
-            const currentPath = arrayToPath(fsi.path);
+            const currentPath = fsi.path;
 
             if (currentPath === this.state.lastPath) return;
 
@@ -121,7 +121,7 @@ const GetPreview = (props: { fsi: FsItem; file: Data }) => {
 };
 
 const Image = (props: { fsi: FsItem }) => {
-    return <img src={convertFileSrc(arrayToPath(props.fsi.path))} alt="" />;
+    return <img src={convertFileSrc(props.fsi.path)} alt="" />;
 };
 //https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf
 const Pdf = (props: { fsi: FsItem; file: Data }) => {
@@ -154,7 +154,7 @@ const Text = (props: { fsi: FsItem; file: Data }) => {
 };
 
 const Video = (props: { fsi: FsItem; type: string }) => {
-    const src = convertFileSrc(arrayToPath(props.fsi.path));
+    const src = convertFileSrc(props.fsi.path);
     return (
         <div>
             <video autoPlay controls>

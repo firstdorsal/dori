@@ -3,8 +3,13 @@ import { clone, cloneDeep } from "lodash";
 import mime from "mime";
 import { Config, FileListMap, FsItem, FsType } from "../types";
 
-export const getLast = <T>(a: Array<T>) => {
-    return a[a.length - 1];
+export const getLastPartOfPath = (a: string) => {
+    return a.substring(a.lastIndexOf("/") + 1);
+};
+
+export const getParentPath = (a: string) => {
+    const b = a.substring(0, a.lastIndexOf("/"));
+    return b.length ? b : "/";
 };
 
 export const arrayUntil = <T>(a: Array<T>, until: number) => {
@@ -19,8 +24,8 @@ export const arrayRange = <T>(a: Array<T>, from: number, until: number) => {
     return a.filter((e, i) => i <= Math.max(until, 0) && i >= from);
 };
 
-export const isHiddenPath = (path: string[]) => {
-    return getLast(path).startsWith(".");
+export const isHiddenPath = (path: string) => {
+    return getLastPartOfPath(path).startsWith(".");
 };
 
 export const arrayToPath = (a: string[]) => {
@@ -35,7 +40,7 @@ export const pathToArray = (path: string) => {
 };
 
 export const getFileTypeFromFsItem = (fsi: FsItem) => {
-    return getFileTypeFromString(arrayToPath(fsi.path));
+    return getFileTypeFromString(fsi.path);
 };
 
 export const getFileTypeFromString = (path: string) => {
@@ -115,8 +120,8 @@ export const countSelected = (items: FsItem[]) => {
 
 export const readDir = async (fsi: FsItem): Promise<FsItem[] | false> => {
     if (fsi.fs_type !== FsType.Directory) return false;
-    const fileList: { path: string[]; fs_type: FsType }[] = await invoke("read_dir", {
-        path: arrayToPath(fsi.path)
+    const fileList: { path: string; fs_type: FsType }[] = await invoke("read_dir", {
+        path: fsi.path
     });
 
     return fileList.map(file => {
@@ -141,8 +146,8 @@ export const defaultFsItem = {
     mimeType: ""
 };
 
-export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string[]) => {
-    return fileListMap[arrayToPath(currentPath)];
+export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string) => {
+    return fileListMap[currentPath];
 };
 
 export const mergeFileLists = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {

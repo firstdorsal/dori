@@ -15,7 +15,7 @@ export const Main = (props: {
     readonly updateDir: InstanceType<typeof App>["updateDir"];
     readonly updateFsItem: InstanceType<typeof App>["updateFsItems"];
 
-    readonly currentDir: string[];
+    readonly currentDir: string;
     readonly hostname: string;
     readonly preview: null | FsItem;
     readonly fileList: FsItem[];

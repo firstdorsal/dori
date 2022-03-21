@@ -1,11 +1,14 @@
 import { FsItem, FsType } from "../types";
-import { getLast } from "./utils";
+import { getLastPartOfPath } from "./utils";
 
-export type SortMethod = "alphabetic" | "name-length"; // TODO alphabetic ignore casing
+export enum SortMethod {
+    Alphabetic = 0,
+    NameLength = 1
+} // TODO alphabetic ignore casing
 
 export const sortAlphabetic = (items: FsItem[]) => {
     return items.sort((item1, item2) => {
-        if (getLast(item1.path) < getLast(item2.path)) {
+        if (getLastPartOfPath(item1.path) < getLastPartOfPath(item2.path)) {
             return -1;
         } else {
             return 1;
@@ -29,7 +32,7 @@ export const seperateDirectories = (items: FsItem[]) => {
 
 export const sortNameLength = (items: FsItem[]) => {
     return items.sort((item1, item2) => {
-        if (getLast(item1.path).length < getLast(item2.path).length) {
+        if (getLastPartOfPath(item1.path).length < getLastPartOfPath(item2.path).length) {
             return -1;
         } else {
             return 1;
@@ -43,14 +46,14 @@ export const sortItems = (
     seperateDirectoriesOption?: boolean
 ) => {
     switch (method) {
-        case "alphabetic": {
+        case SortMethod.Alphabetic: {
             if (seperateDirectoriesOption === true) {
                 const [folders, others] = seperateDirectories(items);
                 return [...sortAlphabetic(folders), ...sortAlphabetic(others)];
             }
             return sortAlphabetic(items);
         }
-        case "name-length": {
+        case SortMethod.NameLength: {
             if (seperateDirectoriesOption === true) {
                 const [folders, others] = seperateDirectories(items);
                 return [...sortNameLength(folders), ...sortNameLength(others)];

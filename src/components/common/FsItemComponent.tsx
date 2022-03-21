@@ -3,7 +3,14 @@ import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
 import { App } from "../../App";
 import { FsItem, FsType, UpdateFsItemOption } from "../../types";
-import { arrayToPath, arrayUntil, defaultFsItem, getLast, isHiddenPath } from "../../utils/utils";
+import {
+    arrayToPath,
+    arrayUntil,
+    defaultFsItem,
+    getLastPartOfPath,
+    isHiddenPath,
+    pathToArray
+} from "../../utils/utils";
 
 export enum FsItemComponentStyle {
     breadcrumb = "breadcrumb",
@@ -14,7 +21,7 @@ export interface BreadcrumbInfo {
     readonly hostname: string;
     readonly i: number;
     readonly pathItem: string;
-    readonly currentDir: string[];
+    readonly currentDir: string;
 }
 
 interface FsItemComponentProps {
@@ -41,7 +48,7 @@ export default class FsItemComponent extends PureComponent<
                 onClick={() =>
                     this.props.updateDir({
                         ...defaultFsItem,
-                        path: arrayUntil(bc.currentDir, bc.i),
+                        path: arrayToPath(arrayUntil(pathToArray(bc.currentDir), bc.i)),
                         fs_type: FsType.Directory
                     })
                 }
@@ -110,7 +117,7 @@ const ListItem = (props: {
     if (props.fsItem === undefined) throw Error("Missing fsItem");
 
     const fsi = props.fsItem;
-    const p = arrayToPath(fsi.path);
+    const p = fsi.path;
 
     const innerStyle: CSSProperties = {};
     innerStyle.color = isHiddenPath(fsi.path) ? "lightgrey" : "black";
@@ -159,7 +166,7 @@ const ListItem = (props: {
                 onClick={() => props.updateFsItem(props.listIndex, UpdateFsItemOption.Selected)}
                 style={innerStyle}
             >
-                {getLast(fsi.path)}
+                {getLastPartOfPath(fsi.path)}
             </div>
         </div>
     );

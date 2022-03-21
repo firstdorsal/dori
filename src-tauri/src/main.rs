@@ -20,7 +20,7 @@ fn main() {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct FsItem {
-    path: Vec<String>,
+    path: String,
     fs_type: String,
 }
 
@@ -34,11 +34,8 @@ async fn read_dir(path: String) -> Vec<FsItem> {
         let path = item_u.path().into_os_string().into_string().unwrap();
         let fs_type_f = item_u.file_type().unwrap();
 
-        let mut s: Vec<_> = path.split('/').map(ToString::to_string).collect();
-        s[0] = String::from("/");
-
         out_items.push(FsItem {
-            path: s,
+            path,
             fs_type: if fs_type_f.is_file() {
                 String::from("-")
             } else if fs_type_f.is_dir() {

@@ -3,9 +3,10 @@ import { Breadcrumb } from "rsuite";
 import { FiChevronRight } from "react-icons/fi";
 import FsItemComponent, { FsItemComponentStyle } from "../common/FsItemComponent";
 import { App } from "../../App";
+import { pathToArray } from "../../utils/utils";
 
 interface UrlBarProps {
-    currentDir: string[];
+    currentDir: string;
     updateDir: InstanceType<typeof App>["updateDir"];
     showPreview: InstanceType<typeof App>["showPreview"];
     hostname: string;
@@ -19,7 +20,7 @@ export default class UrlBar extends PureComponent<UrlBarProps, UrlBarState> {
                     maxItems={10}
                     separator={<FiChevronRight style={{ transform: "translate(0px,2px)" }} />}
                 >
-                    {this.props.currentDir.map((pathItem, i) => {
+                    {pathToArray(this.props.currentDir).map((pathItem, i) => {
                         return (
                             <FsItemComponent
                                 key={pathItem}
