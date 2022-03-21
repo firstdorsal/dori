@@ -1,11 +1,11 @@
 import { Component, CSSProperties } from "react";
 
 interface AsideProps {
-    readonly style?: CSSProperties;
+  readonly style?: CSSProperties;
 }
 interface AsideState {}
 export default class Aside extends Component<AsideProps, AsideState> {
-    render = () => {
-        return <aside className="Aside"></aside>;
-    };
+  render = () => {
+    return <aside className="Aside"></aside>;
+  };
 }
