@@ -1,13 +1,13 @@
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Component, PureComponent, useEffect, useRef } from "react";
-import { FsItem } from "../../types";
+import { FsItem } from "../../lib/types";
 import {
   arrayToPath,
   getFileTypeFromFsItem,
   getFileTypeFromString,
   isTextType,
   sdmt,
-} from "../../utils/utils";
+} from "../../lib/utils";
 /*@ts-ignore*/
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import { invoke } from "@tauri-apps/api";

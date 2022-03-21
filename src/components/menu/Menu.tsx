@@ -5,14 +5,10 @@ import ChevronUpIcon from "mdi-react/ChevronUpIcon";
 import RefreshIcon from "mdi-react/RefreshIcon";
 import GearIcon from "mdi-react/GearIcon";
 
-import { Page } from "../../types";
-import { App } from "../../App";
+import { G, Page } from "../../lib/types";
 
 interface MenuProps {
-  readonly goUpDirectory: InstanceType<typeof App>["goUpDirectory"];
-  readonly reloadDirectory: InstanceType<typeof App>["reloadDirectory"];
-  readonly goThroughHistory: InstanceType<typeof App>["goThroughHistory"];
-  readonly updatePage: InstanceType<typeof App>["updatePage"];
+  readonly g: G;
 }
 interface MenuState {}
 export default class Menu extends Component<MenuProps, MenuState> {
@@ -21,31 +17,31 @@ export default class Menu extends Component<MenuProps, MenuState> {
       <div className="Menu">
         <button
           style={{ background: "none", outline: "none" }}
-          onClick={() => this.props.goThroughHistory("back")}
+          onClick={() => this.props.g.goThroughHistory("back")}
         >
           <ChevronLeftIcon />
         </button>
         <button
           style={{ background: "none", outline: "none" }}
-          onClick={() => this.props.goThroughHistory("forward")}
+          onClick={() => this.props.g.goThroughHistory("forward")}
         >
           <ChevronRightIcon />
         </button>
         <button
           style={{ background: "none", outline: "none" }}
-          onClick={() => this.props.goUpDirectory()}
+          onClick={() => this.props.g.goUpDirectory()}
         >
           <ChevronUpIcon />
         </button>
         <button
           style={{ background: "none", outline: "none" }}
-          onClick={() => this.props.reloadDirectory()}
+          onClick={() => this.props.g.reloadDirectory()}
         >
           <RefreshIcon />
         </button>
         <button
           style={{ background: "none", outline: "none", float: "right" }}
-          onClick={() => this.props.updatePage(Page.config)}
+          onClick={() => this.props.g.updatePage(Page.config)}
         >
           <GearIcon />
         </button>

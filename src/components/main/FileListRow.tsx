@@ -1,15 +1,13 @@
 import { CSSProperties, PureComponent } from "react";
 import { App } from "../../App";
-import { FsItem } from "../../types";
+import { FsItem, G } from "../../lib/types";
 import FsItemComponent from "../common/FsItemComponent";
 
 interface FileListRowProps {
   readonly fsItem: FsItem;
-  readonly updateDir: InstanceType<typeof App>["updateDir"];
-  readonly showPreview: InstanceType<typeof App>["showPreview"];
   readonly listIndex: number;
-  readonly updateFsItem: InstanceType<typeof App>["updateFsItems"];
   readonly style: CSSProperties;
+  readonly g: G;
 }
 interface FileListRowState {}
 export default class FileListRow extends PureComponent<FileListRowProps, FileListRowState> {
@@ -17,10 +15,8 @@ export default class FileListRow extends PureComponent<FileListRowProps, FileLis
     return (
       <div style={this.props.style} className="FileListRow">
         <FsItemComponent
-          updateFsItem={this.props.updateFsItem}
           listIndex={this.props.listIndex}
-          updateDir={this.props.updateDir}
-          showPreview={this.props.showPreview}
+          g={this.props.g}
           fsItem={this.props.fsItem}
         ></FsItemComponent>
       </div>

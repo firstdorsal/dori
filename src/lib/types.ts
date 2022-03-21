@@ -1,5 +1,18 @@
 import { FromSchema } from "json-schema-to-ts";
-import { configSchema } from "./utils/configSchema";
+import { App } from "../App";
+import { configSchema } from "./configSchema";
+
+export interface G {
+  readonly newWindow: InstanceType<typeof App>["newWindow"];
+  readonly reloadDirectory: InstanceType<typeof App>["reloadDirectory"];
+  readonly goUpDirectory: InstanceType<typeof App>["goUpDirectory"];
+  readonly goThroughHistory: InstanceType<typeof App>["goThroughHistory"];
+  readonly updatePage: InstanceType<typeof App>["updatePage"];
+  readonly updateDir: InstanceType<typeof App>["updateDir"];
+  readonly updateFsItems: InstanceType<typeof App>["updateFsItems"];
+  readonly showPreview: InstanceType<typeof App>["showPreview"];
+  readonly fsItemClick: InstanceType<typeof App>["fsItemClick"];
+}
 
 export enum Page {
   config = "config",

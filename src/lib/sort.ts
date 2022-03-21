@@ -1,4 +1,4 @@
-import { FsItem, FsType } from "../types";
+import { FsItem, FsType } from "./types";
 import { getLastPartOfPath } from "./utils";
 
 export enum SortMethod {

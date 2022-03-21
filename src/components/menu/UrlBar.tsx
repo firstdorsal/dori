@@ -3,13 +3,13 @@ import { Breadcrumb } from "rsuite";
 import { FiChevronRight } from "react-icons/fi";
 import FsItemComponent, { FsItemComponentStyle } from "../common/FsItemComponent";
 import { App } from "../../App";
-import { pathToArray } from "../../utils/utils";
+import { pathToArray } from "../../lib/utils";
+import { G } from "../../lib/types";
 
 interface UrlBarProps {
-  currentDir: string;
-  updateDir: InstanceType<typeof App>["updateDir"];
-  showPreview: InstanceType<typeof App>["showPreview"];
-  hostname: string;
+  readonly currentDir: string;
+  readonly g: G;
+  readonly hostname: string;
 }
 interface UrlBarState {}
 export default class UrlBar extends PureComponent<UrlBarProps, UrlBarState> {
@@ -25,8 +25,7 @@ export default class UrlBar extends PureComponent<UrlBarProps, UrlBarState> {
               <FsItemComponent
                 key={pathItem}
                 itemStyle={FsItemComponentStyle.breadcrumb}
-                updateDir={this.props.updateDir}
-                showPreview={this.props.showPreview}
+                g={this.props.g}
                 breadcrumbInfo={{
                   hostname: this.props.hostname,
                   pathItem,

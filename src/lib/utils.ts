@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api";
 import { cloneDeep } from "lodash";
 import mime from "mime";
-import { Config, FileListMap, FsItem, FsType } from "../types";
+import { Config, FileListMap, FsItem, FsType } from "./types";
 
 export const getLastPartOfPath = (a: string) => {
   return a.substring(a.lastIndexOf("/") + 1);
@@ -106,6 +106,7 @@ export const actions = [
   "SELECT_FROM_TO",
   "SELECT_MULTIPLE",
   "TOGGLE_HIDDEN_FILES",
+  "SELECT_ALL",
 ] as const;
 
 export const defaultConfig: Config = {
@@ -120,6 +121,7 @@ export const defaultConfig: Config = {
       SELECT_FROM_TO: "shift",
       SELECT_MULTIPLE: "ctrl",
       TOGGLE_HIDDEN_FILES: "ctrl+h",
+      SELECT_ALL: "ctrl+a",
     },
   },
 } as const;

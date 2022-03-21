@@ -1,5 +1,5 @@
 import { CSSProperties, PureComponent } from "react";
-import { FsItem } from "../../types";
+import { FsItem, G } from "../../lib/types";
 import FileListRow from "./FileListRow";
 import { App } from "../../App";
 import { FixedSizeList as List } from "react-window";
@@ -7,35 +7,33 @@ import AutoSizer from "react-virtualized-auto-sizer";
 
 interface FileListProps {
   readonly fileList: FsItem[];
-  readonly updateDir: InstanceType<typeof App>["updateDir"];
-  readonly showPreview: InstanceType<typeof App>["showPreview"];
-  readonly updateFsItem: InstanceType<typeof App>["updateFsItems"];
+  readonly g: G;
 }
 interface FileListState {}
 export default class FileList extends PureComponent<FileListProps, FileListState> {
   render = () => {
     if (this.props.fileList === undefined) return <div></div>;
-
+    const list: FsItem[] = [];
+    const indexes: number[] = [];
+    this.props.fileList.forEach((fsi, i) => {
+      if (fsi.ui.display) {
+        list.push(fsi);
+        indexes.push(i);
+      }
+    });
     return (
       <div className="FileList">
         <AutoSizer>
           {({ height, width }) => (
-            <List
-              itemSize={20}
-              height={height}
-              itemCount={this.props.fileList.length}
-              width={width}
-            >
+            <List itemSize={20} height={height} itemCount={list.length} width={width}>
               {({ index, style }: { index: number; style: CSSProperties }) => {
-                const fsi = this.props.fileList[index];
+                const fsi = list[index];
                 return (
                   <FileListRow
                     style={style}
-                    listIndex={index}
-                    updateFsItem={this.props.updateFsItem}
+                    listIndex={indexes[index]}
                     key={fsi.path}
-                    showPreview={this.props.showPreview}
-                    updateDir={this.props.updateDir}
+                    g={this.props.g}
                     fsItem={fsi}
                   />
                 );

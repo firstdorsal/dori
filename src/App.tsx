@@ -13,12 +13,12 @@ import {
   mergeFileLists as getMergedFileList,
   pathToArray,
   readDir,
-} from "./utils/utils";
+} from "./lib/utils";
 import "rsuite/dist/rsuite.min.css";
-import { Config, FileListMap, FsItem, FsType, Page, UpdateFsItemOption } from "./types";
+import { Config, FileListMap, FsItem, FsType, G, Page, UpdateFsItemOption } from "./lib/types";
 
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { sortItems, SortMethod } from "./utils/sort";
+import { sortItems, SortMethod } from "./lib/sort";
 import { HotKeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
@@ -169,6 +169,7 @@ export class App extends PureComponent<AppProps, AppState> {
 
   hotkeyHandlers = {
     NEW_WINDOW: () => {
+      this.setState({ selectMultiplePressed: false });
       this.newWindow();
     },
     LIST_UP: (e: any) => {
@@ -227,7 +228,12 @@ export class App extends PureComponent<AppProps, AppState> {
       this.setState({ selectMultiplePressed: false });
     },
     TOGGLE_HIDDEN_FILES: () => {
+      this.setState({ selectMultiplePressed: false });
       this.toggleHiddenFiles();
+    },
+    SELECT_ALL: () => {
+      this.setState({ selectMultiplePressed: false });
+      this.updateFsItems(0, UpdateFsItemOption.SelectAll);
     },
   };
 
@@ -280,6 +286,19 @@ export class App extends PureComponent<AppProps, AppState> {
     this.setState({ currentPage: newPage });
   };
 
+  fsItemClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    data: { index?: number; fsi?: FsItem }
+  ) => {
+    if (e.detail === 1 && data.index !== undefined) {
+      return this.updateFsItems(data.index, UpdateFsItemOption.Selected);
+    }
+    if (e.detail === 2 && data.fsi !== undefined && data.fsi.fs_type !== "-") {
+      return this.updateDir(data.fsi);
+    }
+    if (data.fsi !== undefined) return this.showPreview(data.fsi);
+  };
+
   updateFsItems = (index: number, option: UpdateFsItemOption) => {
     this.setState(({ fileListMap, selectMultiplePressed, selectFromToPressed, lastSelected }) => {
       fileListMap = cloneDeep(fileListMap);
@@ -296,8 +315,8 @@ export class App extends PureComponent<AppProps, AppState> {
             if (selectFromToPressed === true) {
               if (i <= Math.max(lastSelected, index) && i >= Math.min(lastSelected, index)) {
                 fsi.ui.selected = true;
-                return fsi;
               }
+              return fsi;
             }
 
             if (i === index) {
@@ -309,6 +328,10 @@ export class App extends PureComponent<AppProps, AppState> {
             return fsi;
           }
           case UpdateFsItemOption.SelectAll: {
+            if (fsi.ui.display === true) {
+              fsi.ui.selected = true;
+            }
+            return fsi;
           }
 
           default: {
@@ -319,6 +342,18 @@ export class App extends PureComponent<AppProps, AppState> {
 
       return { fileListMap, lastSelected: index };
     });
+  };
+
+  g: G = {
+    newWindow: this.newWindow,
+    reloadDirectory: this.reloadDirectory,
+    goUpDirectory: this.goUpDirectory,
+    goThroughHistory: this.goThroughHistory,
+    updatePage: this.updatePage,
+    updateDir: this.updateDir,
+    showPreview: this.showPreview,
+    updateFsItems: this.updateFsItems,
+    fsItemClick: this.fsItemClick,
   };
 
   renderPage = (page: Page) => {
@@ -338,17 +373,10 @@ export class App extends PureComponent<AppProps, AppState> {
         return (
           <Fragment>
             <Split className="split" sizes={[10, 90]} minSize={100} gutterSize={5} snapOffset={0}>
-              <Aside></Aside>
+              <Aside />
 
               <Main
-                newWindow={this.newWindow}
-                reloadDirectory={this.reloadDirectory}
-                goUpDirectory={this.goUpDirectory}
-                goThroughHistory={this.goThroughHistory}
-                updatePage={this.updatePage}
-                updateDir={this.updateDir}
-                showPreview={this.showPreview}
-                updateFsItem={this.updateFsItems}
+                g={this.g}
                 currentDir={this.state.currentDir}
                 hostname={this.state.hostname}
                 preview={this.state.preview}

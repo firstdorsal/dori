@@ -34,7 +34,8 @@
     "react-virtualized-auto-sizer": "^1.0.6",
     "react-window": "^1.8.6",
     "rsuite": "^5.6.4",
-    "sass": "^1.49.9"
+    "sass": "^1.49.9",
+    "use-double-click": "^1.0.5"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.0-rc.7",

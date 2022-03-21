@@ -2,7 +2,7 @@ import { Component, CSSProperties, PureComponent } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
 import { App } from "../../App";
-import { FsItem, FsType, UpdateFsItemOption } from "../../types";
+import { FsItem, FsType, G, UpdateFsItemOption } from "../../lib/types";
 import {
   arrayToPath,
   arrayUntil,
@@ -10,7 +10,7 @@ import {
   getLastPartOfPath,
   isHiddenPath,
   pathToArray,
-} from "../../utils/utils";
+} from "../../lib/utils";
 
 export enum FsItemComponentStyle {
   breadcrumb = "breadcrumb",
@@ -26,12 +26,10 @@ export interface BreadcrumbInfo {
 
 interface FsItemComponentProps {
   readonly fsItem?: FsItem;
-  readonly updateDir: InstanceType<typeof App>["updateDir"];
-  readonly showPreview: InstanceType<typeof App>["showPreview"];
   readonly itemStyle?: FsItemComponentStyle;
   readonly breadcrumbInfo?: BreadcrumbInfo;
-  readonly updateFsItem?: InstanceType<typeof App>["updateFsItems"];
   readonly listIndex?: number;
+  readonly g: G;
 }
 interface FsItemComponentState {}
 
@@ -46,7 +44,7 @@ export default class FsItemComponent extends PureComponent<
       <Breadcrumb.Item
         key={bc.pathItem}
         onClick={() =>
-          this.props.updateDir({
+          this.props.g.updateDir({
             ...defaultFsItem,
             path: arrayToPath(arrayUntil(pathToArray(bc.currentDir), bc.i)),
             fs_type: FsType.Directory,
@@ -61,17 +59,11 @@ export default class FsItemComponent extends PureComponent<
   renderCurrentStyle = (currentStyle: FsItemComponentStyle) => {
     switch (currentStyle) {
       case FsItemComponentStyle.listItem: {
-        if (this.props.updateFsItem === undefined || this.props.listIndex === undefined) {
+        if (this.props.g.updateFsItems === undefined || this.props.listIndex === undefined) {
           throw Error("Missing listIndex or updateFsItem");
         }
         return (
-          <ListItem
-            listIndex={this.props.listIndex}
-            fsItem={this.props.fsItem}
-            updateDir={this.props.updateDir}
-            showPreview={this.props.showPreview}
-            updateFsItem={this.props.updateFsItem}
-          />
+          <ListItem listIndex={this.props.listIndex} fsItem={this.props.fsItem} g={this.props.g} />
         );
       }
       case FsItemComponentStyle.breadcrumb: {
@@ -107,13 +99,7 @@ Folders cannot be dragged onto themselves
 
 */
 
-const ListItem = (props: {
-  fsItem?: FsItem;
-  updateFsItem: InstanceType<typeof App>["updateFsItems"];
-  updateDir: InstanceType<typeof App>["updateDir"];
-  showPreview: InstanceType<typeof App>["showPreview"];
-  listIndex: number;
-}) => {
+const ListItem = (props: { fsItem?: FsItem; g: G; listIndex: number }) => {
   if (props.fsItem === undefined) throw Error("Missing fsItem");
 
   const fsi = props.fsItem;
@@ -159,13 +145,7 @@ const ListItem = (props: {
       <div
         ref={drag}
         id={p}
-        onDoubleClick={() => {
-          console.log("xxx");
-
-          if (fsi.fs_type !== "-") return props.updateDir(fsi);
-          props.showPreview(fsi);
-        }}
-        onClick={() => props.updateFsItem(props.listIndex, UpdateFsItemOption.Selected)}
+        onClick={(e) => props.g.fsItemClick(e, { index: props.listIndex, fsi })}
         style={innerStyle}
       >
         {getLastPartOfPath(fsi.path)}

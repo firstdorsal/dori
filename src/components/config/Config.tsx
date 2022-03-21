@@ -1,9 +1,9 @@
 import { Component, PureComponent } from "react";
 import { JSONSchema7 } from "json-schema";
 import Form from "@rjsf/core";
-import { configSchema } from "../../utils/configSchema";
-import { Config, Page } from "../../types";
-import { defaultConfig } from "../../utils/utils";
+import { configSchema } from "../../lib/configSchema";
+import { Config, Page } from "../../lib/types";
+import { defaultConfig } from "../../lib/utils";
 import { App } from "../../App";
 import CloseIcon from "mdi-react/CloseIcon";
 import ReloadAlertIcon from "mdi-react/ReloadAlertIcon";

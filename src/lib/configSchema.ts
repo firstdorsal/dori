@@ -46,6 +46,9 @@ export const configSchema = {
             TOGGLE_HIDDEN_FILES: {
               type: "string",
             },
+            SELECT_ALL: {
+              type: "string",
+            },
           },
         },
       },

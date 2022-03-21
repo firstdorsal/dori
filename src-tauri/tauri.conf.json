@@ -1,65 +1,65 @@
 {
-    "package": {
-        "productName": "tauri-explorer",
-        "version": "0.1.0"
+  "package": {
+    "productName": "tauri-explorer",
+    "version": "0.1.0"
+  },
+  "build": {
+    "distDir": "../dist",
+    "devPath": "http://localhost:3000",
+    "beforeDevCommand": "yarn dev",
+    "beforeBuildCommand": "yarn build"
+  },
+  "tauri": {
+    "bundle": {
+      "active": false,
+      "targets": "all",
+      "identifier": "com.tauri.dev",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "",
+      "category": "FileExplorer",
+      "shortDescription": "",
+      "longDescription": "",
+      "deb": {
+        "depends": [],
+        "useBootstrapper": false
+      }
     },
-    "build": {
-        "distDir": "../dist",
-        "devPath": "http://localhost:3000",
-        "beforeDevCommand": "yarn dev",
-        "beforeBuildCommand": "yarn build"
+    "updater": {
+      "active": false
     },
-    "tauri": {
-        "bundle": {
-            "active": false,
-            "targets": "all",
-            "identifier": "com.tauri.dev",
-            "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.icns",
-                "icons/icon.ico"
-            ],
-            "resources": [],
-            "externalBin": [],
-            "copyright": "",
-            "category": "FileExplorer",
-            "shortDescription": "",
-            "longDescription": "",
-            "deb": {
-                "depends": [],
-                "useBootstrapper": false
-            }
-        },
-        "updater": {
-            "active": false
-        },
-        "allowlist": {
-            "all": true,
-            "protocol": {
-                "all": false,
-                "asset": true,
-                "assetScope": ["*"]
-            },
-            "fs": {
-                "scope": ["$CONFIG/*"]
-            },
-            "path": {
-                "all": true
-            }
-        },
-        "windows": [
-            {
-                "title": "Tauri Explorer",
-                "width": 800,
-                "height": 600,
-                "resizable": true,
-                "fullscreen": false
-            }
-        ],
-        "security": {
-            "csp": "default-src tauri: asset: https://asset.localhost"
-        }
+    "allowlist": {
+      "all": true,
+      "protocol": {
+        "all": false,
+        "asset": true,
+        "assetScope": ["*"]
+      },
+      "fs": {
+        "scope": ["$CONFIG/*"]
+      },
+      "path": {
+        "all": true
+      }
+    },
+    "windows": [
+      {
+        "title": "Tauri Explorer",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' tauri: asset: https://asset.localhost"
     }
+  }
 }
