@@ -116,6 +116,7 @@ const ListItem = (props: { fsItem?: FsItem; g: G; listIndex: number }) => {
   interface DropResult {
     path: string;
   }
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "default",
     item: { path: p },
