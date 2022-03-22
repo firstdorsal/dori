@@ -6,8 +6,10 @@ import {
   countSelected,
   defaultConfig,
   defaultFsItem,
+  Direction,
   getCurrentFileList,
   getHotkeys,
+  getNearestVisible,
   getParentPath,
   isHiddenPath,
   mergeFileLists as getMergedFileList,
@@ -29,7 +31,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { Main } from "./components/main/Main";
 import Aside from "./components/aside/Aside";
 import Split from "react-split";
-import { cloneDeep } from "lodash";
+import { cloneDeep, first } from "lodash";
 
 interface AppProps {}
 interface AppState {
@@ -95,7 +97,7 @@ export class App extends PureComponent<AppProps, AppState> {
       }
 
       fileListMap[newDirPath] = sortItems(mergedFileList, SortMethod.Alphabetic);
-      const [length, firstItemIndex] = countSelected(fileListMap[newDirPath]);
+      const [length] = countSelected(fileListMap[newDirPath]);
       if (length === 0) {
         fileListMap[newDirPath][0].ui.selected = true;
       }
@@ -176,17 +178,17 @@ export class App extends PureComponent<AppProps, AppState> {
       e.preventDefault();
 
       const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
-      const [length, firstItemIndex] = countSelected(currentFileList);
+
+      const [length, firstSelectedIndex] = countSelected(currentFileList);
 
       if (length === 0) {
         return this.updateFsItems(currentFileList.length - 1, UpdateFsItemOption.Selected);
       }
 
       if (length === 1) {
-        return this.updateFsItems(
-          firstItemIndex === 0 ? currentFileList.length - 1 : firstItemIndex - 1,
-          UpdateFsItemOption.Selected
-        );
+        const nearest = getNearestVisible(currentFileList, firstSelectedIndex, Direction.Previous);
+        if (nearest === undefined) return;
+        return this.updateFsItems(nearest, UpdateFsItemOption.Selected);
       }
     },
     LIST_DOWN: (e: any) => {
@@ -194,15 +196,19 @@ export class App extends PureComponent<AppProps, AppState> {
 
       const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
 
-      const [length, firstItemIndex] = countSelected(currentFileList);
+      const [length, firstSelectedIndex] = countSelected(currentFileList);
+      console.log(currentFileList.length, length, firstSelectedIndex);
+
       if (length === 0) {
         return this.updateFsItems(0, UpdateFsItemOption.Selected);
       }
+
       if (length === 1) {
-        return this.updateFsItems(
-          firstItemIndex === currentFileList.length - 1 ? 0 : firstItemIndex + 1,
-          UpdateFsItemOption.Selected
-        );
+        const nearest = getNearestVisible(currentFileList, firstSelectedIndex, Direction.Next);
+        console.log(nearest);
+
+        if (nearest === undefined) return;
+        return this.updateFsItems(nearest, UpdateFsItemOption.Selected);
       }
     },
     GO_UP: () => {
@@ -210,9 +216,11 @@ export class App extends PureComponent<AppProps, AppState> {
     },
     GO_INTO: () => {
       const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
-      const [length, firstItemIndex] = countSelected(currentFileList);
+
+      const [length, firstSelectedIndex] = countSelected(currentFileList);
+
       if (length === 1) {
-        return this.updateDir(currentFileList[firstItemIndex]);
+        return this.updateDir(currentFileList[firstSelectedIndex]);
       }
     },
     SELECT_FROM_TO_KEYDOWN: () => {
@@ -239,16 +247,39 @@ export class App extends PureComponent<AppProps, AppState> {
 
   toggleHiddenFiles = () => {
     this.setState(({ fileListMap, currentDir, displayHiddenFiles }) => {
+      displayHiddenFiles = !displayHiddenFiles;
+
       const currentFileList = getCurrentFileList(fileListMap, currentDir);
+
+      let selectCount = 0;
       fileListMap[currentDir] = currentFileList.map((fsi) => {
-        const isHidden = isHiddenPath(fsi.path);
-        if (isHidden === true) {
-          return { ...fsi, ui: { ...fsi.ui, display: !displayHiddenFiles } };
+        if (isHiddenPath(fsi.path) === true) {
+          fsi = cloneDeep(fsi);
+          fsi.ui.display = displayHiddenFiles;
+          if (displayHiddenFiles === false) {
+            fsi.ui.selected = false;
+          }
+          return fsi;
+        } else {
+          if (fsi.ui.selected) selectCount += 1;
         }
         return fsi;
       });
+      console.log(displayHiddenFiles, selectCount);
 
-      return { fileListMap, displayHiddenFiles: !displayHiddenFiles };
+      // if items will be hidden and none of the visible is selected we select the first
+      if (displayHiddenFiles === false && selectCount === 0) {
+        for (let i = 0; i < fileListMap[currentDir].length; i++) {
+          let fsi = fileListMap[currentDir][i];
+          if (fsi.ui.display === true) {
+            fileListMap[currentDir][i] = cloneDeep(fsi);
+            fileListMap[currentDir][i].ui.selected = true;
+            break;
+          }
+        }
+      }
+
+      return { fileListMap, displayHiddenFiles };
     });
   };
 
@@ -263,9 +294,9 @@ export class App extends PureComponent<AppProps, AppState> {
   };
 
   loadConfig = async () => {
-    // try to load config
-
     const configPath = await this.getConfigPath();
+
+    // try to load the config
     let configString = await readTextFile(configPath).catch(async () => {
       return await this.writeConfig(defaultConfig, configPath);
     });

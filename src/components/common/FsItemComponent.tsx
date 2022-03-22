@@ -13,8 +13,8 @@ import {
 } from "../../lib/utils";
 
 export enum FsItemComponentStyle {
-  breadcrumb = "breadcrumb",
-  listItem = "listItem",
+  Breadcrumb = 0,
+  ListItem = 1,
 }
 
 export interface BreadcrumbInfo {
@@ -58,7 +58,7 @@ export default class FsItemComponent extends PureComponent<
 
   renderCurrentStyle = (currentStyle: FsItemComponentStyle) => {
     switch (currentStyle) {
-      case FsItemComponentStyle.listItem: {
+      case FsItemComponentStyle.ListItem: {
         if (this.props.g.updateFsItems === undefined || this.props.listIndex === undefined) {
           throw Error("Missing listIndex or updateFsItem");
         }
@@ -66,7 +66,7 @@ export default class FsItemComponent extends PureComponent<
           <ListItem listIndex={this.props.listIndex} fsItem={this.props.fsItem} g={this.props.g} />
         );
       }
-      case FsItemComponentStyle.breadcrumb: {
+      case FsItemComponentStyle.Breadcrumb: {
         return this.renderBreadcrumbItem();
       }
       default: {
@@ -78,7 +78,7 @@ export default class FsItemComponent extends PureComponent<
   render = () => {
     return (
       <span className="FsItemComponent">
-        {this.renderCurrentStyle(this.props.itemStyle ?? FsItemComponentStyle.listItem)}
+        {this.renderCurrentStyle(this.props.itemStyle ?? FsItemComponentStyle.ListItem)}
       </span>
     );
   };

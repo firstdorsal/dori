@@ -24,7 +24,7 @@ export default class UrlBar extends PureComponent<UrlBarProps, UrlBarState> {
             return (
               <FsItemComponent
                 key={pathItem}
-                itemStyle={FsItemComponentStyle.breadcrumb}
+                itemStyle={FsItemComponentStyle.Breadcrumb}
                 g={this.props.g}
                 breadcrumbInfo={{
                   hostname: this.props.hostname,

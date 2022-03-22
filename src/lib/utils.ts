@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api";
+import { fs, invoke } from "@tauri-apps/api";
 import { cloneDeep } from "lodash";
 import mime from "mime";
 import { Config, FileListMap, FsItem, FsType } from "./types";
@@ -127,15 +127,18 @@ export const defaultConfig: Config = {
 } as const;
 
 export const countSelected = (items: FsItem[]) => {
-  let firstItemIndex = -1;
-  const l = items.filter((item, i) => {
-    if (firstItemIndex === -1 && item.ui.selected === true) {
-      firstItemIndex = i;
+  let firstVisibleItemIndex = -1;
+  let selectCount = 0;
+  for (let i = 0; i < items.length; i++) {
+    const fsi = items[i];
+    if (fsi.ui.selected === true) {
+      selectCount += 1;
+      if (firstVisibleItemIndex === -1) {
+        firstVisibleItemIndex = i;
+      }
     }
-    return item.ui.selected;
-  });
-
-  return [l.length, firstItemIndex];
+  }
+  return [selectCount, firstVisibleItemIndex];
 };
 
 export const readDir = async (fsi: FsItem): Promise<FsItem[] | false> => {
@@ -172,4 +175,45 @@ export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string
 
 export const mergeFileLists = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {
   return currentFileList;
+};
+
+export enum Direction {
+  Next = 0,
+  Previous = 1,
+}
+
+export const getNearestVisible = (items: FsItem[], currentIndex: number, direction: Direction) => {
+  switch (direction) {
+    case Direction.Next:
+      for (let i = currentIndex + 1; i < items.length; i++) {
+        const fsi = items[i];
+        if (fsi.ui.display === true) {
+          return i;
+        }
+      }
+      for (let i = 0; i < currentIndex; i++) {
+        const fsi = items[i];
+        if (fsi.ui.display === true) {
+          return i;
+        }
+      }
+      break;
+    case Direction.Previous:
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        const fsi = items[i];
+        if (fsi.ui.display === true) {
+          return i;
+        }
+      }
+      for (let i = items.length - 1; i > currentIndex; i--) {
+        const fsi = items[i];
+        if (fsi.ui.display === true) {
+          return i;
+        }
+      }
+
+      break;
+    default:
+      throw Error("Invalid Direction for getNearestVisible");
+  }
 };
