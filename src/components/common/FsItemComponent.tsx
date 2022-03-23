@@ -1,8 +1,7 @@
-import { Component, CSSProperties, PureComponent } from "react";
+import { CSSProperties, PureComponent } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
-import { App } from "../../App";
-import { FsItem, FsType, G, UpdateFsItemOption } from "../../lib/types";
+import { FsItem, FsType, G } from "../../lib/types";
 import {
   arrayToPath,
   arrayUntil,
