@@ -101,12 +101,20 @@ export const actions = [
   "NEW_WINDOW",
   "LIST_UP",
   "LIST_DOWN",
-  "GO_UP",
-  "GO_INTO",
+  "FOLDER_UP",
+  "FOLDER_INTO",
   "SELECT_FROM_TO",
   "SELECT_MULTIPLE",
   "TOGGLE_HIDDEN_FILES",
   "SELECT_ALL",
+  "SELECT_LAST",
+  "SELECT_FIRST",
+  "DELETE",
+  "RENAME",
+  "INSERT",
+  "RELOAD",
+  "HISTORY_BACK",
+  "HISTORY_FORWARD",
 ] as const;
 
 export const defaultConfig: Config = {
@@ -116,12 +124,21 @@ export const defaultConfig: Config = {
       NEW_WINDOW: "ctrl+n",
       LIST_UP: "up",
       LIST_DOWN: "down",
-      GO_UP: "left",
-      GO_INTO: "right",
+      FOLDER_UP: "left",
+      FOLDER_INTO: "right",
       SELECT_FROM_TO: "shift",
       SELECT_MULTIPLE: "ctrl",
       TOGGLE_HIDDEN_FILES: "ctrl+h",
       SELECT_ALL: "ctrl+a",
+      // TODO
+      SELECT_LAST: "End",
+      SELECT_FIRST: "Home",
+      DELETE: "Delete",
+      RENAME: "F2",
+      INSERT: "Insert",
+      RELOAD: "ctrl+r",
+      HISTORY_BACK: "alt+left",
+      HISTORY_FORWARD: "alt+right",
     },
   },
 } as const;
@@ -173,7 +190,7 @@ export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string
   return fileListMap[currentPath];
 };
 
-export const mergeFileLists = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {
+export const getMergedFileList = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {
   return currentFileList;
 };
 

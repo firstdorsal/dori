@@ -1,4 +1,4 @@
-import { Component, PureComponent } from "react";
+import { PureComponent } from "react";
 import { JSONSchema7 } from "json-schema";
 import Form from "@rjsf/core";
 import { configSchema } from "../../lib/configSchema";

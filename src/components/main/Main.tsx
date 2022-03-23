@@ -12,6 +12,7 @@ export const Main = (props: {
   readonly hostname: string;
   readonly preview: null | FsItem;
   readonly fileList: FsItem[];
+  readonly listRef: any;
 }) => {
   return (
     <main className="Main">
@@ -20,7 +21,7 @@ export const Main = (props: {
         <UrlBar currentDir={props.currentDir} hostname={props.hostname} g={props.g} />
 
         {props.preview ? <Preview fsi={props.preview}></Preview> : ""}
-        <FileList fileList={props.fileList} g={props.g}></FileList>
+        <FileList listRef={props.listRef} fileList={props.fileList} g={props.g}></FileList>
       </div>
     </main>
   );

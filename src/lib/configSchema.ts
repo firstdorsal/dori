@@ -31,10 +31,10 @@ export const configSchema = {
             LIST_DOWN: {
               type: "string",
             },
-            GO_UP: {
+            FOLDER_UP: {
               type: "string",
             },
-            GO_INTO: {
+            FOLDER_INTO: {
               type: "string",
             },
             SELECT_FROM_TO: {
@@ -47,6 +47,30 @@ export const configSchema = {
               type: "string",
             },
             SELECT_ALL: {
+              type: "string",
+            },
+            SELECT_LAST: {
+              type: "string",
+            },
+            SELECT_FIRST: {
+              type: "string",
+            },
+            DELETE: {
+              type: "string",
+            },
+            RENAME: {
+              type: "string",
+            },
+            INSERT: {
+              type: "string",
+            },
+            RELOAD: {
+              type: "string",
+            },
+            HISTORY_BACK: {
+              type: "string",
+            },
+            HISTORY_FORWARD: {
               type: "string",
             },
           },

@@ -8,6 +8,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 interface FileListProps {
   readonly fileList: FsItem[];
   readonly g: G;
+  readonly listRef: any;
 }
 interface FileListState {}
 export default class FileList extends PureComponent<FileListProps, FileListState> {
@@ -21,13 +22,21 @@ export default class FileList extends PureComponent<FileListProps, FileListState
         indexes.push(i);
       }
     });
+
     return (
       <div className="FileList">
         <AutoSizer>
           {({ height, width }) => (
-            <List itemSize={20} height={height} itemCount={list.length} width={width}>
+            <List
+              ref={this.props.listRef}
+              itemSize={20}
+              height={height}
+              itemCount={list.length}
+              width={width}
+            >
               {({ index, style }: { index: number; style: CSSProperties }) => {
                 const fsi = list[index];
+
                 return (
                   <FileListRow
                     style={style}
