@@ -41,7 +41,6 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
 
       const type = getFileTypeFromString(currentPath);
       if (type === null) return;
-      console.log(isTextType(type));
 
       if (sdmt.pdf.includes(type) || isTextType(type)) {
         this.setState({ file: 1, lastPath: currentPath });

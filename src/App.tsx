@@ -32,7 +32,6 @@ import Aside from "./components/aside/Aside";
 import Split from "react-split";
 import { cloneDeep } from "lodash";
 
-interface AppProps {}
 interface AppState {
   readonly fileListMap: FileListMap;
   readonly currentDir: string;
@@ -53,10 +52,12 @@ export enum SelectionAction {
   Multiple = 1,
 }
 
-export class App extends PureComponent<AppProps, AppState> {
+export class App extends PureComponent<{}, AppState> {
   listRef: any;
   selectMultiplePressed: boolean;
   selectFromToPressed: boolean;
+  visibleItems: number;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -76,6 +77,7 @@ export class App extends PureComponent<AppProps, AppState> {
     this.listRef = createRef();
     this.selectMultiplePressed = false;
     this.selectFromToPressed = false;
+    this.visibleItems = 0;
   }
 
   updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
@@ -95,6 +97,7 @@ export class App extends PureComponent<AppProps, AppState> {
         if (newIndex !== undefined) {
           historyIndex = newIndex;
         }
+        // TODO update the visisble lines before the rest
         // TODO
         // merge the updated list with the saved list
         // updates the items that have changed in the fs but keeps the ui related ones
@@ -191,6 +194,11 @@ export class App extends PureComponent<AppProps, AppState> {
     });
   };
 
+  scrollElementIntoView = (index: number, position?: string) => {
+    this.visibleItems = index;
+    this.listRef.current.scrollToItem(index, position);
+  };
+
   hotkeyHandlers = {
     NEW_WINDOW: () => {
       this.selectMultiplePressed = true;
@@ -210,7 +218,7 @@ export class App extends PureComponent<AppProps, AppState> {
       if (length === 1) {
         const nearest = getNearestVisible(currentFileList, firstSelectedIndex, Direction.Previous);
         if (nearest === undefined) return;
-        this.listRef.current.scrollToItem(nearest);
+        this.scrollElementIntoView(nearest);
         return this.updateFsItems(nearest, UpdateFsItemOption.Selected);
       }
     },
@@ -229,8 +237,8 @@ export class App extends PureComponent<AppProps, AppState> {
         const nearest = getNearestVisible(currentFileList, firstSelectedIndex, Direction.Next);
 
         if (nearest === undefined) return;
-        this.listRef.current.scrollToItem(nearest);
 
+        this.scrollElementIntoView(nearest);
         return this.updateFsItems(nearest, UpdateFsItemOption.Selected);
       }
     },
@@ -316,7 +324,7 @@ export class App extends PureComponent<AppProps, AppState> {
         return { fileListMap, displayHiddenFiles, lastSelected };
       },
       () => {
-        this.listRef.current.scrollToItem(this.state.lastSelected, "center");
+        this.scrollElementIntoView(this.state.lastSelected, "center");
       }
     );
   };
@@ -345,7 +353,6 @@ export class App extends PureComponent<AppProps, AppState> {
 
   updateConfig = async (newConfig: Config) => {
     const configPath = await this.getConfigPath();
-    console.log(newConfig);
 
     this.setState({ config: newConfig });
     await this.writeConfig(newConfig, configPath);
@@ -369,10 +376,6 @@ export class App extends PureComponent<AppProps, AppState> {
   };
 
   updateFsItems = (index: number, option: UpdateFsItemOption) => {
-    console.time();
-
-    // TODO update the visisble lines before the rest
-
     this.setState(({ fileListMap, lastSelected, currentDir, lastSelectionAction }) => {
       if (option === UpdateFsItemOption.Selected) {
         if (this.selectMultiplePressed === true) {
@@ -433,8 +436,6 @@ export class App extends PureComponent<AppProps, AppState> {
         });
         lastSelectionAction = SelectionAction.Multiple;
       }
-
-      console.timeEnd();
 
       return { fileListMap, lastSelected: index, lastSelectionAction };
     });

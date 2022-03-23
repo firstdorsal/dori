@@ -46,6 +46,17 @@ export const getFileTypeFromFsItem = (fsi: FsItem) => {
 export const getFileTypeFromString = (path: string) => {
   mime.define(typeMap, true);
   let type = mime.getType(path);
+  if (type === null) {
+    const mimes = Object.keys(noEndingMimeMappings);
+    const endings = Object.values(noEndingMimeMappings);
+    for (let i = 0; i < mimes.length; i++) {
+      const mime = mimes[i];
+      const ending = endings[i];
+      if (path.endsWith(ending)) {
+        return mime;
+      }
+    }
+  }
   return type;
 };
 
@@ -65,11 +76,33 @@ export const sdmt = {
   nativeImages: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
   polyfilledImages: ["image/avif"],
   pdf: ["application/pdf"],
-  textLike: ["application/json", "application/xml", "application/javascript"],
+  textLike: [
+    "application/json",
+    "application/xml",
+    "application/javascript",
+    "application/x-sh",
+    "application/desktop",
+    "application/lock",
+    "application/toml",
+    "application/node",
+    "application/gitignore",
+  ],
   nativeVideos: ["video/mp4", "video/mpeg", "video/webm", "video/quicktime"],
 };
 
-export const typeMap: mime.TypeMap = { "text/typescript": ["ts"], "text/typescript+xml": ["tsx"] };
+export const typeMap: mime.TypeMap = {
+  "text/typescript": ["ts"],
+  "text/typescript+xml": ["tsx"],
+  "application/desktop": ["desktop"],
+  "application/lock": ["lock"],
+};
+
+export const noEndingMimeMappings = {
+  "application/gitignore": ".gitignore",
+  "application/json": ".prettierrc",
+};
+
+// TODO render markdown and html;
 
 export const getHotkeys = (config: Config) => {
   const keyMap = {};
