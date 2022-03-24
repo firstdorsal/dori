@@ -1,7 +1,24 @@
-import { fs, invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api";
 import { cloneDeep } from "lodash";
 import mime from "mime";
 import { Config, FileListMap, FsItem, FsType } from "./types";
+
+export const isBookmarked = (fsi: FsItem, config: Config) => {
+  for (let i = 0; i < config.bookmarks.list.length; i++) {
+    const bm = config.bookmarks.list[i];
+    if (bm.location === fsi.path) return true;
+  }
+  return false;
+};
+
+export const getFsItemByDirname = (fsItems: FsItem[], dirname: string) => {
+  for (let i = 0; i < fsItems.length; i++) {
+    const fsi = fsItems[i];
+    if (fsi.path === dirname) {
+      return fsi;
+    }
+  }
+};
 
 export const getLastPartOfPath = (a: string) => {
   return a.substring(a.lastIndexOf("/") + 1);
@@ -95,6 +112,7 @@ export const typeMap: mime.TypeMap = {
   "text/typescript+xml": ["tsx"],
   "application/desktop": ["desktop"],
   "application/lock": ["lock"],
+  "application/x-blender": ["blend", "blender"],
 };
 
 export const noEndingMimeMappings = {
@@ -129,6 +147,39 @@ export const getHotkeys = (config: Config) => {
     },
   };
 };
+
+export const contextMenuActions = [
+  "COPY",
+  "PASTE",
+  "CUT",
+  "DELETE",
+  "DUPLICATE",
+  "COPY_PATH",
+  "COPY_NAME",
+  "EXECUTE",
+  "OPEN_WITH",
+  "RENAME",
+  "EDIT_PERMS",
+  "UNMOUNT_VOLUME",
+  "DECRYPT",
+  "ENCRYPT",
+  "EXTRACT",
+  "ARCHIVE",
+  "PROPERTIES",
+  "OPEN_TERMINAL",
+  "RUN_IN_TERMINAL",
+  "SQUOOSH_IMAGE",
+  "SEND_VIA_MAIL",
+  "QUICK_LOCAL_SHARE",
+  "SQUOOSH_IMAGE_SEND_VIA_MAIL",
+  "SYNC_WITH",
+  "VALIDATE_CHECKSUM",
+  "GIT_CLONE",
+  "GIT_CLONE_INTO_HERE",
+  "OPEN_REMOTE", // get if folder has a .git subfolder and check if it has a remote origin
+  "DOCKER_COMPOSE_UP",
+  "DS",
+] as const;
 
 export const actions = [
   "NEW_WINDOW",
@@ -174,7 +225,10 @@ export const defaultConfig: Config = {
       HISTORY_FORWARD: "alt+right",
     },
   },
-} as const;
+  bookmarks: {
+    list: [{ icon: "", location: "/home", name: "Home" }],
+  },
+};
 
 export const countSelected = (items: FsItem[]) => {
   let firstVisibleItemIndex = -1;
@@ -210,6 +264,7 @@ export const defaultFsItem = {
   ui: {
     selected: false,
     display: true,
+    bookmarked: false,
   },
   path: "",
   fs_type: "",

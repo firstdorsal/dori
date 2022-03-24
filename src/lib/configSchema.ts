@@ -3,7 +3,7 @@ import { actions } from "./utils";
 export const configSchema = {
   title: "Config",
   type: "object",
-  required: ["hotkeys"],
+  required: ["hotkeys", "bookmarks"],
   additionalProperties: false,
   properties: {
     hotkeys: {
@@ -38,9 +38,11 @@ export const configSchema = {
               type: "string",
             },
             SELECT_FROM_TO: {
+              readOnly: true,
               type: "string",
             },
             SELECT_MULTIPLE: {
+              readOnly: true,
               type: "string",
             },
             TOGGLE_HIDDEN_FILES: {
@@ -72,6 +74,34 @@ export const configSchema = {
             },
             HISTORY_FORWARD: {
               type: "string",
+            },
+          },
+        },
+      },
+    },
+    bookmarks: {
+      type: "object",
+      title: "Bookmarks",
+      additionalProperties: false,
+      required: ["list"],
+      properties: {
+        list: {
+          type: "array",
+          title: "List",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["location", "name", "icon"],
+            properties: {
+              location: {
+                type: "string",
+              },
+              name: {
+                type: "string",
+              },
+              icon: {
+                type: "string",
+              },
             },
           },
         },

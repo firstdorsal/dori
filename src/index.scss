@@ -36,10 +36,6 @@ a {
 }
 
 .App {
-  > div {
-    height: 100%;
-    width: 100%;
-  }
   height: 100%;
   width: 100%;
 }
@@ -145,6 +141,11 @@ form.rjsf {
   margin: 0px;
   background: #e6e6e686;
 }
+.Preview > div {
+  width: calc(100% + 10px);
+  height: 100%;
+  background: #e6e6e686;
+}
 
 .Main {
   height: 100%;
@@ -187,23 +188,16 @@ form.rjsf {
   cursor: col-resize;
 }
 
-main > div {
-  width: calc(100% + 5px);
-}
-
 .Menu {
+  margin-top: 5px;
+  margin-bottom: 5px;
   padding-top: 3px;
   height: 35px;
 }
 
-.UrlBar {
-  height: 30px;
-  padding-left: 10px;
-}
-
 .FileList {
   overflow: scroll;
-  height: calc(100vh - 65px);
+  height: calc(100vh - 45px);
 }
 .FileListRow:hover {
   background: rgba(0, 0, 0, 0.068);
@@ -211,4 +205,79 @@ main > div {
 
 .FileListRowItem div {
   margin-left: 7px;
+}
+
+.ContextMenu {
+  position: fixed;
+  z-index: 5;
+  width: 20px;
+  height: 20px;
+  background: #eeeeee;
+  border-radius: 2px;
+}
+
+.UrlBar {
+  display: inline-block;
+  height: 30px;
+  width: calc(100% - 220px);
+  padding-left: 10px;
+  vertical-align: -4px;
+  position: relative;
+
+  .breadcrumbs {
+    padding: 5px;
+    padding-left: 10px;
+
+    font-size: 14px;
+    position: absolute;
+    top: 0px;
+    left: 5px;
+  }
+
+  input {
+    margin-left: 5px;
+    width: calc(100% - 10px);
+    background-color: #0000;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+  }
+
+  input:hover {
+    opacity: 1;
+  }
+  input:focus {
+    color: #000;
+    opacity: 1;
+  }
+}
+
+.ConfigComponent {
+  overflow-y: scroll;
+  height: 100%;
+
+  form {
+    .errors,
+    .text-danger {
+      display: none;
+    }
+  }
+}
+
+ol {
+  all: unset;
+}
+
+.Bookmarks {
+  ol {
+    padding-top: 10px;
+    padding-left: 5px;
+    display: block;
+    li {
+      padding: 0px 5px;
+    }
+  }
+}
+.Preview {
+  z-index: 2;
 }

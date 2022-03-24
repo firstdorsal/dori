@@ -13,14 +13,26 @@ import {
   isHiddenPath,
   getMergedFileList,
   readDir,
+  getLastPartOfPath,
+  isBookmarked,
 } from "./lib/utils";
 import "rsuite/dist/rsuite.min.css";
-import { Config, FileListMap, FsItem, FsType, G, Page, UpdateFsItemOption } from "./lib/types";
+import {
+  Config,
+  ContextMenuData,
+  FileListMap,
+  FsItem,
+  FsType,
+  G,
+  Page,
+  SelectionAction,
+  UpdateFsItemOption,
+} from "./lib/types";
 import update from "immutability-helper";
 
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { sortItems, SortMethod } from "./lib/sort";
-import { HotKeys } from "react-hotkeys";
+import { GlobalHotKeys, configure as configureHotkeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
 
@@ -31,10 +43,15 @@ import { Main } from "./components/main/Main";
 import Aside from "./components/aside/Aside";
 import Split from "react-split";
 import { cloneDeep } from "lodash";
+import ContextMenu from "./components/menu/ContextMenu";
+import Menu from "./components/menu/Menu";
+import Preview from "./components/preview/Preview";
+
+configureHotkeys({ ignoreTags: [] });
 
 interface AppState {
   readonly fileListMap: FileListMap;
-  readonly currentDir: string;
+  readonly currentDir: FsItem;
   readonly hostname: string;
   readonly history: FsItem[];
   readonly historyIndex: number;
@@ -45,11 +62,7 @@ interface AppState {
   readonly asideWidth: number;
   readonly lastSelected: number;
   readonly lastSelectionAction: SelectionAction;
-}
-
-export enum SelectionAction {
-  Single = 0,
-  Multiple = 1,
+  readonly contextMenu: ContextMenuData | null;
 }
 
 export class App extends PureComponent<{}, AppState> {
@@ -62,7 +75,11 @@ export class App extends PureComponent<{}, AppState> {
     super(props);
     this.state = {
       fileListMap: {},
-      currentDir: "/home/paul/Downloads/rpi-alarm",
+      currentDir: {
+        ...defaultFsItem,
+        path: "/home/paul/Downloads/rpi-alarm",
+        fs_type: FsType.Directory,
+      },
       hostname: "",
       history: [],
       historyIndex: -1,
@@ -73,12 +90,24 @@ export class App extends PureComponent<{}, AppState> {
       asideWidth: 100,
       lastSelected: -1,
       lastSelectionAction: SelectionAction.Single,
+      contextMenu: null,
     };
     this.listRef = createRef();
     this.selectMultiplePressed = false;
     this.selectFromToPressed = false;
     this.visibleItems = 0;
   }
+
+  updateDirByPath = async (path: string, pushHistory?: boolean) => {
+    await this.updateDir(
+      {
+        ...defaultFsItem,
+        path: path,
+        fs_type: FsType.Directory,
+      },
+      pushHistory
+    );
+  };
 
   updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
     const newDirPath = fsi.path;
@@ -121,14 +150,16 @@ export class App extends PureComponent<{}, AppState> {
             if (length > 1) {
               lastSelectionAction = SelectionAction.Multiple;
             }
-            if (newDirPath !== currentDir) {
+            if (newDirPath !== currentDir.path) {
               lastSelected = firstVisibleItemIndex;
             }
           }
         }
+        currentDir = update(currentDir, { path: { $set: newDirPath } });
+
         return {
           fileListMap,
-          currentDir: newDirPath,
+          currentDir,
           lastSelected,
           lastSelectionAction,
           history,
@@ -138,35 +169,26 @@ export class App extends PureComponent<{}, AppState> {
     );
   };
 
+  handleBlur = () => {};
+
   componentDidMount = async () => {
+    document.addEventListener("contextmenu", this.handleContextMenu);
+    document.addEventListener("click", this.handleClick);
+    window.addEventListener("blur", this.handleBlur);
+
     const hostname: string = await invoke("get_hostname");
     const config = await this.loadConfig();
     this.setState({ hostname, config });
-    await this.updateDir({
-      ...defaultFsItem,
-      path: this.state.currentDir,
-      fs_type: FsType.Directory,
-    });
+    await this.updateDir(this.state.currentDir);
   };
 
   goUpDirectory = () => {
     // TODO select the directory we were last in
-    this.updateDir({
-      ...defaultFsItem,
-      path: getParentPath(this.state.currentDir),
-      fs_type: FsType.Directory,
-    });
+    this.updateDirByPath(getParentPath(this.state.currentDir.path));
   };
 
   reloadDirectory = async () => {
-    await this.updateDir(
-      {
-        ...defaultFsItem,
-        path: this.state.currentDir,
-        fs_type: FsType.Directory,
-      },
-      false
-    );
+    await this.updateDir(this.state.currentDir, false);
   };
 
   goThroughHistory = (direction: "back" | "forward") => {
@@ -207,7 +229,10 @@ export class App extends PureComponent<{}, AppState> {
     LIST_UP: (e: any) => {
       e.preventDefault();
 
-      const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
+      const currentFileList = getCurrentFileList(
+        this.state.fileListMap,
+        this.state.currentDir.path
+      );
 
       const [length, firstSelectedIndex] = countSelected(currentFileList);
 
@@ -225,7 +250,10 @@ export class App extends PureComponent<{}, AppState> {
     LIST_DOWN: (e: any) => {
       e.preventDefault();
 
-      const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
+      const currentFileList = getCurrentFileList(
+        this.state.fileListMap,
+        this.state.currentDir.path
+      );
 
       const [length, firstSelectedIndex] = countSelected(currentFileList);
 
@@ -246,7 +274,10 @@ export class App extends PureComponent<{}, AppState> {
       this.goUpDirectory();
     },
     FOLDER_INTO: () => {
-      const currentFileList = getCurrentFileList(this.state.fileListMap, this.state.currentDir);
+      const currentFileList = getCurrentFileList(
+        this.state.fileListMap,
+        this.state.currentDir.path
+      );
 
       const [length, firstSelectedIndex] = countSelected(currentFileList);
 
@@ -283,7 +314,7 @@ export class App extends PureComponent<{}, AppState> {
 
         let selectCount = 0;
         fileListMap = update(fileListMap, {
-          [currentDir]: {
+          [currentDir.path]: {
             $apply: (v: FsItem[]) =>
               v.map((fsi) => {
                 if (isHiddenPath(fsi.path) === true) {
@@ -303,8 +334,8 @@ export class App extends PureComponent<{}, AppState> {
 
         let firstVisibleItemIndex = -1;
         if (displayHiddenFiles === false && selectCount === 0) {
-          for (let i = 0; i < fileListMap[currentDir].length; i++) {
-            let fsi = fileListMap[currentDir][i];
+          for (let i = 0; i < fileListMap[currentDir.path].length; i++) {
+            let fsi = fileListMap[currentDir.path][i];
             if (fsi.ui.display === true) {
               firstVisibleItemIndex = i;
               break;
@@ -315,7 +346,7 @@ export class App extends PureComponent<{}, AppState> {
         if (firstVisibleItemIndex !== -1) {
           lastSelected = firstVisibleItemIndex;
           fileListMap = update(fileListMap, {
-            [currentDir]: {
+            [currentDir.path]: {
               [firstVisibleItemIndex]: { ui: { selected: { $set: true } } },
             },
           });
@@ -367,6 +398,14 @@ export class App extends PureComponent<{}, AppState> {
     data: { index?: number; fsi?: FsItem }
   ) => {
     if (e.detail === 1 && data.index !== undefined) {
+      if (this.state.config?.hotkeys.keyMap.SELECT_MULTIPLE === "ctrl") {
+        this.selectMultiplePressed = e.ctrlKey;
+      }
+
+      if (this.state.config?.hotkeys.keyMap.SELECT_FROM_TO === "shift") {
+        this.selectFromToPressed = e.shiftKey;
+      }
+
       return this.updateFsItems(data.index, UpdateFsItemOption.Selected);
     }
     if (e.detail === 2 && data.fsi !== undefined && data.fsi.fs_type !== "-") {
@@ -375,19 +414,25 @@ export class App extends PureComponent<{}, AppState> {
     if (data.fsi !== undefined) return this.showPreview(data.fsi);
   };
 
-  updateFsItems = (index: number, option: UpdateFsItemOption) => {
+  // TODO fix problems onblur hotkeys not selecting with ctrl on window loose focus and reenter
+
+  updateFsItems = (
+    index: number,
+    option: UpdateFsItemOption,
+    e?: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
     this.setState(({ fileListMap, lastSelected, currentDir, lastSelectionAction }) => {
       if (option === UpdateFsItemOption.Selected) {
         if (this.selectMultiplePressed === true) {
           fileListMap = update(fileListMap, {
-            [currentDir]: {
+            [currentDir.path]: {
               [index]: { ui: { selected: { $apply: (s) => !s } } },
             },
           });
           lastSelectionAction = SelectionAction.Multiple;
         } else if (this.selectFromToPressed === true) {
           fileListMap = update(fileListMap, {
-            [currentDir]: {
+            [currentDir.path]: {
               $apply: (v: FsItem[]) =>
                 v.map((fsi, i) => {
                   if (i <= Math.max(lastSelected, index) && i >= Math.min(lastSelected, index)) {
@@ -403,7 +448,7 @@ export class App extends PureComponent<{}, AppState> {
           // deselect all if the last action selected multiple items
           if (lastSelectionAction === SelectionAction.Multiple) {
             fileListMap = update(fileListMap, {
-              [currentDir]: {
+              [currentDir.path]: {
                 $apply: (v: FsItem[]) =>
                   v.map((fsi) => {
                     fsi.ui.selected = false;
@@ -413,7 +458,7 @@ export class App extends PureComponent<{}, AppState> {
             });
           }
           fileListMap = update(fileListMap, {
-            [currentDir]: {
+            [currentDir.path]: {
               [index]: { ui: { selected: { $set: true } } },
               ...(lastSelected !== -1 &&
                 lastSelected !== index && {
@@ -426,7 +471,7 @@ export class App extends PureComponent<{}, AppState> {
         }
       } else if (option === UpdateFsItemOption.SelectAll) {
         fileListMap = update(fileListMap, {
-          [currentDir]: {
+          [currentDir.path]: {
             $apply: (v: FsItem[]) =>
               v.map((fsi) => {
                 fsi.ui.selected = true;
@@ -441,6 +486,104 @@ export class App extends PureComponent<{}, AppState> {
     });
   };
 
+  bookmarkFolder = (folder?: FsItem) => {
+    if (folder === undefined) folder = this.state.currentDir;
+    let newConfig;
+    if (!this.state.config) return;
+    if (isBookmarked(folder, this.state.config) === false) {
+      let name = getLastPartOfPath(folder.path);
+      if (name.length === 0) {
+        name = this.state.hostname;
+      }
+      newConfig = update(this.state.config, {
+        bookmarks: {
+          list: {
+            $push: [{ icon: "", location: folder.path, name }],
+          },
+        },
+      });
+    } else {
+      newConfig = update(this.state.config, {
+        bookmarks: {
+          list: {
+            $apply: (
+              v: {
+                location: string;
+                name: string;
+                icon: string;
+              }[]
+            ) =>
+              v.filter((bm) => {
+                return bm.location !== folder?.path;
+              }),
+          },
+        },
+      });
+    }
+    if (newConfig === null) return;
+    this.updateConfig(newConfig);
+  };
+
+  addToFavorites = () => {};
+
+  handleClick = (e: any) => {
+    this.setState({
+      contextMenu: null,
+    });
+  };
+
+  handleContextMenu = (e: any) => {
+    if (e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    e.preventDefault();
+
+    const { pageX, pageY, target } = e;
+    let ctxmtype = target.attributes?.ctxmtype?.value;
+    const id: string = target.id;
+
+    if (ctxmtype === undefined || id === undefined) return;
+
+    ctxmtype = parseInt(ctxmtype);
+
+    //console.log(e);
+
+    this.setState({
+      contextMenu: { x: pageX, y: pageY, type: ctxmtype, id },
+    });
+  };
+
+  componentWillUnmount = () => {
+    document.removeEventListener("contextmenu", this.handleContextMenu);
+    document.removeEventListener("click", this.handleClick);
+    window.removeEventListener("blur", this.handleBlur);
+  };
+
+  render = () => {
+    if (this.state.config === null) return <div></div>;
+
+    return (
+      <div className="App">
+        <GlobalHotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers} />
+        <DndProvider backend={HTML5Backend}>
+          {this.state.contextMenu !== null && (
+            <ContextMenu config={this.state.config} contextMenu={this.state.contextMenu} />
+          )}
+
+          <RenderPage
+            fileList={getCurrentFileList(this.state.fileListMap, this.state.currentDir.path)}
+            config={this.state.config}
+            g={this.g}
+            page={this.state.currentPage}
+            listRef={this.listRef}
+            currentDir={this.state.currentDir}
+            hostname={this.state.hostname}
+            preview={this.state.preview}
+          />
+        </DndProvider>
+      </div>
+    );
+  };
+
   g = {
     newWindow: this.newWindow,
     reloadDirectory: this.reloadDirectory,
@@ -452,33 +595,8 @@ export class App extends PureComponent<{}, AppState> {
     updateFsItems: this.updateFsItems,
     fsItemClick: this.fsItemClick,
     updateConfig: this.updateConfig,
-  };
-
-  render = () => {
-    if (this.state.config === null) return <div></div>;
-
-    return (
-      <div className="App">
-        <HotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers}>
-          <DndProvider backend={HTML5Backend}>
-            {this.state.config === null ? (
-              <div></div>
-            ) : (
-              <RenderPage
-                fileList={getCurrentFileList(this.state.fileListMap, this.state.currentDir)}
-                config={this.state.config}
-                g={this.g}
-                page={this.state.currentPage}
-                listRef={this.listRef}
-                currentDir={this.state.currentDir}
-                hostname={this.state.hostname}
-                preview={this.state.preview}
-              />
-            )}
-          </DndProvider>
-        </HotKeys>
-      </div>
-    );
+    bookmarkFolder: this.bookmarkFolder,
+    updateDirByPath: this.updateDirByPath,
   };
 }
 
@@ -487,7 +605,7 @@ const RenderPage = (props: {
   g: G;
   config: Config;
   listRef: any;
-  currentDir: string;
+  currentDir: FsItem;
   hostname: string;
   preview: FsItem | null;
   fileList: FsItem[];
@@ -505,8 +623,20 @@ const RenderPage = (props: {
     case "main": {
       return (
         <Fragment>
-          <Split className="split" sizes={[10, 90]} minSize={100} gutterSize={5} snapOffset={0}>
-            <Aside />
+          <Menu
+            hostname={props.hostname}
+            config={props.config}
+            currentDir={props.currentDir}
+            g={props.g}
+          />
+          <Split
+            className="split"
+            sizes={[10, 70, 20]}
+            minSize={[100, 300, 100]}
+            gutterSize={5}
+            snapOffset={0}
+          >
+            <Aside g={props.g} config={props.config} />
 
             <Main
               g={props.g}
@@ -515,7 +645,9 @@ const RenderPage = (props: {
               hostname={props.hostname}
               preview={props.preview}
               fileList={props.fileList}
+              config={props.config}
             />
+            <Preview fsi={props.preview} />
           </Split>
         </Fragment>
       );

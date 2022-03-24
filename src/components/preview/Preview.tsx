@@ -64,22 +64,10 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
   };
 
   render = () => {
-    if (this.props.fsi === null) return <div></div>;
-
     return (
-      <div
-        style={{
-          width: "200px",
-          height: "300px",
-          position: "fixed",
-          right: "0px",
-          top: "0px",
-          border: "1px solid black",
-        }}
-        className="Preview"
-      >
-        <div style={{ height: "100%", width: "100%" }}>
-          <GetPreview fsi={this.props.fsi} file={this.state.file} />
+      <div className="Preview">
+        <div>
+          {this.props.fsi !== null && <GetPreview fsi={this.props.fsi} file={this.state.file} />}
         </div>
       </div>
     );

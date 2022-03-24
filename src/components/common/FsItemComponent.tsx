@@ -1,7 +1,7 @@
 import { CSSProperties, PureComponent } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Breadcrumb } from "rsuite";
-import { FsItem, FsType, G } from "../../lib/types";
+import { ContextMenuType, FsItem, FsType, G } from "../../lib/types";
 import {
   arrayToPath,
   arrayUntil,
@@ -145,6 +145,8 @@ const ListItem = (props: { fsItem?: FsItem; g: G; listIndex: number }) => {
       <div
         ref={drag}
         id={p}
+        /*@ts-ignore*/
+        ctxmtype={ContextMenuType.FileListRowItem}
         onClick={(e) => props.g.fsItemClick(e, { index: props.listIndex, fsi })}
         style={innerStyle}
       >
