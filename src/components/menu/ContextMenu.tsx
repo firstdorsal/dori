@@ -19,8 +19,8 @@ export default class ContextMenu extends Component<ContextMenuProps, ContextMenu
         className="ContextMenu"
       >
         <ol>
-          {getContextMenuActions(cm.type, cm.fsi, cm.multiple).map((action) => {
-            return <li>{action.title}</li>;
+          {getContextMenuActions(cm).map((action) => {
+            return <li key={`action-${action.type}`}>{action.title}</li>;
           })}
         </ol>
       </div>

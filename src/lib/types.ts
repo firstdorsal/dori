@@ -23,39 +23,41 @@ export interface Action {
   title: string;
   icon: string;
   multiple: boolean;
+  dev?: boolean;
   hotkey?: string;
 }
 export enum ActionType {
   COPY = 0,
-  PASTE = 1,
-  CUT = 2,
-  DELETE = 3,
-  DUPLICATE = 4,
-  COPY_PATH = 5,
-  COPY_NAME = 6,
-  EXECUTE = 7,
-  OPEN_WITH = 8,
-  RENAME = 9,
-  EDIT_PERMS = 10,
-  UNMOUNT_VOLUME = 11,
-  DECRYPT = 12,
-  ENCRYPT = 13,
-  EXTRACT = 14,
-  ARCHIVE = 15,
-  PROPERTIES = 16,
-  OPEN_TERMINAL = 17,
-  RUN_IN_TERMINAL = 18,
-  SQUOOSH_IMAGE = 19,
-  SEND_VIA_MAIL = 20,
-  QUICK_LOCAL_SHARE = 21,
-  SQUOOSH_IMAGE_SEND_VIA_MAIL = 22,
-  SYNC_WITH = 23,
-  VALIDATE_CHECKSUM = 24,
-  GIT_CLONE = 25,
-  GIT_CLONE_INTO_HERE = 26,
-  OPEN_REMOTE = 27, // get if folder has a .git subfolder and check if it has a remote origin
-  DOCKER_COMPOSE_UP = 28,
-  DS = 29,
+  LOG = 5,
+  PASTE = 10,
+  CUT = 20,
+  DELETE = 30,
+  DUPLICATE = 40,
+  COPY_PATH = 50,
+  COPY_NAME = 60,
+  EXECUTE = 70,
+  OPEN_WITH = 80,
+  RENAME = 90,
+  EDIT_PERMS = 100,
+  UNMOUNT_VOLUME = 110,
+  DECRYPT = 120,
+  ENCRYPT = 130,
+  EXTRACT = 140,
+  ARCHIVE = 150,
+  PROPERTIES = 160,
+  OPEN_TERMINAL = 170,
+  RUN_IN_TERMINAL = 180,
+  SQUOOSH_IMAGE = 190,
+  SEND_VIA_MAIL = 200,
+  QUICK_LOCAL_SHARE = 210,
+  SQUOOSH_IMAGE_SEND_VIA_MAIL = 220,
+  SYNC_WITH = 230,
+  VALIDATE_CHECKSUM = 240,
+  GIT_CLONE = 250,
+  GIT_CLONE_INTO_HERE = 260,
+  OPEN_REMOTE = 270, // get if folder has a .git subfolder and check if it has a remote origin
+  DOCKER_COMPOSE_UP = 280,
+  DS = 290,
 }
 
 export interface Bookmark {
@@ -70,6 +72,7 @@ export interface ContextMenuData {
   y: number;
   id: string;
   multiple: boolean;
+  dev?: boolean;
   fsi?: FsItem;
 }
 

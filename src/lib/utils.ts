@@ -6,6 +6,7 @@ import {
   ActionType,
   Config,
   ContextMenuActions,
+  ContextMenuData,
   ContextMenuType,
   FileListMap,
   FsItem,
@@ -309,24 +310,34 @@ export const getNearestVisible = (items: FsItem[], currentIndex: number, directi
   }
 };
 
-export const getContextMenuActions = (cmt: ContextMenuType, fsi?: FsItem, multiple?: boolean) => {
-  let l1 = contextMenuActions[cmt]?.actions;
+export const getContextMenuActions = (cm: ContextMenuData) => {
+  const { fsi } = cm;
+
+  let l1 = contextMenuActions[cm.type]?.actions;
   let l2: Action[];
   let l3: Action[];
   let a: Action[] = [...l1];
 
   if (fsi !== undefined) {
-    l2 = contextMenuActions[cmt]?.subTypes?.[fsi.fs_type]?.actions;
+    l2 = contextMenuActions[cm.type]?.subTypes?.[fsi.fs_type]?.actions;
     a = [...a, ...l2];
     if (fsi.fs_type === FsType.File && fsi.mimeType !== undefined) {
       l3 =
-        contextMenuActions[cmt]?.subTypes?.[fsi.fs_type]?.subTypes?.[fsi.mimeType]?.actions ?? [];
+        contextMenuActions[cm.type]?.subTypes?.[fsi.fs_type]?.subTypes?.[fsi.mimeType]?.actions ??
+        [];
       a = [...a, ...l3];
     }
   }
 
-  if (multiple === true) {
-    a = a.filter((action) => action.multiple === true);
+  if (cm.multiple === true) {
+    a = a.filter((action) => {
+      return action.multiple === true;
+    });
+  }
+  if (cm.dev !== true) {
+    a = a.filter((action) => {
+      return action.dev !== true;
+    });
   }
 
   return a;
@@ -337,6 +348,7 @@ export const contextMenuActions: ContextMenuActions = {
     actions: [
       { title: "Copy", icon: "", type: ActionType.COPY, multiple: true },
       { title: "Paste", icon: "", type: ActionType.PASTE, multiple: true },
+      { title: "Log", icon: "", type: ActionType.LOG, multiple: true, dev: true },
     ],
     subTypes: {
       [FsType.Directory]: {

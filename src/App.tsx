@@ -47,7 +47,6 @@ import { cloneDeep } from "lodash";
 import ContextMenu from "./components/menu/ContextMenu";
 import Menu from "./components/menu/Menu";
 import Preview from "./components/preview/Preview";
-import Terminal from "./components/terminal/Terminal";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -72,6 +71,7 @@ export class App extends PureComponent<{}, AppState> {
   selectMultiplePressed: boolean;
   selectFromToPressed: boolean;
   visibleItems: number;
+  dev: boolean;
 
   constructor(props: any) {
     super(props);
@@ -98,6 +98,7 @@ export class App extends PureComponent<{}, AppState> {
     this.selectMultiplePressed = false;
     this.selectFromToPressed = false;
     this.visibleItems = 0;
+    this.dev = true;
   }
 
   updateDirByPath = async (path: string, pushHistory?: boolean) => {
@@ -418,11 +419,7 @@ export class App extends PureComponent<{}, AppState> {
 
   // TODO fix problems onblur hotkeys not selecting with ctrl on window loose focus and reenter
 
-  updateFsItems = (
-    index: number,
-    option: UpdateFsItemOption,
-    e?: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
+  updateFsItems = (index: number, option: UpdateFsItemOption) => {
     this.setState(({ fileListMap, lastSelected, currentDir, lastSelectionAction }) => {
       if (option === UpdateFsItemOption.Selected) {
         if (this.selectMultiplePressed === true) {
@@ -555,6 +552,7 @@ export class App extends PureComponent<{}, AppState> {
         id,
         fsi: getFsItemByDirname(this.state.fileListMap[this.state.currentDir.path], id),
         multiple: this.state.lastSelectionAction === SelectionAction.Multiple,
+        dev: this.dev,
       },
     });
   };
