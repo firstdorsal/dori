@@ -38,9 +38,7 @@ export default class Preview extends Component<PreviewProps, PreviewState> {
       const currentPath = fsi.path;
 
       if (currentPath === this.state.lastPath) return;
-
-      const type = getFileTypeFromString(currentPath);
-      if (type === null) return;
+      const type = fsi.mimeType;
 
       if (sdmt.pdf.includes(type) || isTextType(type)) {
         this.setState({ file: 1, lastPath: currentPath });

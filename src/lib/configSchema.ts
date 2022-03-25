@@ -75,6 +75,18 @@ export const configSchema = {
             HISTORY_FORWARD: {
               type: "string",
             },
+            TOGGLE_BOOKMARK: {
+              type: "string",
+            },
+            COPY: {
+              type: "string",
+            },
+            PASTE: {
+              type: "string",
+            },
+            CUT: {
+              type: "string",
+            },
           },
         },
       },

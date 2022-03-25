@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { Config, ContextMenuData, ContextMenuType } from "../../lib/types";
+import { getContextMenuActions } from "../../lib/utils";
 
 interface ContextMenuProps {
   readonly contextMenu: ContextMenuData;
@@ -17,9 +18,11 @@ export default class ContextMenu extends Component<ContextMenuProps, ContextMenu
         style={{ left: cm.x, top: cm.y }}
         className="ContextMenu"
       >
-        {(() => {
-          return <div onClick={() => console.log("test")}>{this.props.contextMenu.type}</div>;
-        })()}
+        <ol>
+          {getContextMenuActions(cm.type, cm.fsi, cm.multiple).map((action) => {
+            return <li>{action.title}</li>;
+          })}
+        </ol>
       </div>
     );
   };

@@ -15,6 +15,7 @@ import {
   readDir,
   getLastPartOfPath,
   isBookmarked,
+  getFsItemByDirname,
 } from "./lib/utils";
 import "rsuite/dist/rsuite.min.css";
 import {
@@ -46,6 +47,7 @@ import { cloneDeep } from "lodash";
 import ContextMenu from "./components/menu/ContextMenu";
 import Menu from "./components/menu/Menu";
 import Preview from "./components/preview/Preview";
+import Terminal from "./components/terminal/Terminal";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -545,10 +547,15 @@ export class App extends PureComponent<{}, AppState> {
 
     ctxmtype = parseInt(ctxmtype);
 
-    //console.log(e);
-
     this.setState({
-      contextMenu: { x: pageX, y: pageY, type: ctxmtype, id },
+      contextMenu: {
+        x: pageX,
+        y: pageY,
+        type: ctxmtype,
+        id,
+        fsi: getFsItemByDirname(this.state.fileListMap[this.state.currentDir.path], id),
+        multiple: this.state.lastSelectionAction === SelectionAction.Multiple,
+      },
     });
   };
 

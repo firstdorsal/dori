@@ -18,7 +18,10 @@ export default class Bookmarks extends PureComponent<BookmarksProps, BookmarksSt
         <ol>
           {this.props.bookmarks.map((bookmark) => {
             return (
-              <li onClick={() => this.props.g.updateDirByPath(bookmark.location)}>
+              <li
+                key={`bookmark-${bookmark.location}`}
+                onClick={() => this.props.g.updateDirByPath(bookmark.location)}
+              >
                 {bookmark.name}
               </li>
             );

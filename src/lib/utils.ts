@@ -1,7 +1,16 @@
 import { invoke } from "@tauri-apps/api";
 import { cloneDeep } from "lodash";
 import mime from "mime";
-import { Config, FileListMap, FsItem, FsType } from "./types";
+import {
+  Action,
+  ActionType,
+  Config,
+  ContextMenuActions,
+  ContextMenuType,
+  FileListMap,
+  FsItem,
+  FsType,
+} from "./types";
 
 export const isBookmarked = (fsi: FsItem, config: Config) => {
   for (let i = 0; i < config.bookmarks.list.length; i++) {
@@ -148,39 +157,6 @@ export const getHotkeys = (config: Config) => {
   };
 };
 
-export const contextMenuActions = [
-  "COPY",
-  "PASTE",
-  "CUT",
-  "DELETE",
-  "DUPLICATE",
-  "COPY_PATH",
-  "COPY_NAME",
-  "EXECUTE",
-  "OPEN_WITH",
-  "RENAME",
-  "EDIT_PERMS",
-  "UNMOUNT_VOLUME",
-  "DECRYPT",
-  "ENCRYPT",
-  "EXTRACT",
-  "ARCHIVE",
-  "PROPERTIES",
-  "OPEN_TERMINAL",
-  "RUN_IN_TERMINAL",
-  "SQUOOSH_IMAGE",
-  "SEND_VIA_MAIL",
-  "QUICK_LOCAL_SHARE",
-  "SQUOOSH_IMAGE_SEND_VIA_MAIL",
-  "SYNC_WITH",
-  "VALIDATE_CHECKSUM",
-  "GIT_CLONE",
-  "GIT_CLONE_INTO_HERE",
-  "OPEN_REMOTE", // get if folder has a .git subfolder and check if it has a remote origin
-  "DOCKER_COMPOSE_UP",
-  "DS",
-] as const;
-
 export const actions = [
   "NEW_WINDOW",
   "LIST_UP",
@@ -199,7 +175,12 @@ export const actions = [
   "RELOAD",
   "HISTORY_BACK",
   "HISTORY_FORWARD",
+  "TOGGLE_BOOKMARK",
+  "COPY",
+  "PASTE",
+  "CUT",
 ] as const;
+// file://./configSchema.ts
 
 export const defaultConfig: Config = {
   hotkeys: {
@@ -215,6 +196,9 @@ export const defaultConfig: Config = {
       TOGGLE_HIDDEN_FILES: "ctrl+h",
       SELECT_ALL: "ctrl+a",
       // TODO
+      COPY: "ctrl+c",
+      PASTE: "ctrl+v",
+      CUT: "ctrl+x",
       SELECT_LAST: "End",
       SELECT_FIRST: "Home",
       DELETE: "Delete",
@@ -223,6 +207,7 @@ export const defaultConfig: Config = {
       RELOAD: "ctrl+r",
       HISTORY_BACK: "alt+left",
       HISTORY_FORWARD: "alt+right",
+      TOGGLE_BOOKMARK: "ctrl+d",
     },
   },
   bookmarks: {
@@ -256,6 +241,7 @@ export const readDir = async (fsi: FsItem): Promise<FsItem[] | false> => {
       ...cloneDeep(defaultFsItem),
       path: file.path,
       fs_type: file.fs_type,
+      mimeType: file.fs_type === FsType.File ? getFileTypeFromString(file.path) ?? "" : "",
     };
   });
 };
@@ -321,4 +307,49 @@ export const getNearestVisible = (items: FsItem[], currentIndex: number, directi
     default:
       throw Error("Invalid Direction for getNearestVisible");
   }
+};
+
+export const getContextMenuActions = (cmt: ContextMenuType, fsi?: FsItem, multiple?: boolean) => {
+  let l1 = contextMenuActions[cmt]?.actions;
+  let l2: Action[];
+  let l3: Action[];
+  let a: Action[] = [...l1];
+
+  if (fsi !== undefined) {
+    l2 = contextMenuActions[cmt]?.subTypes?.[fsi.fs_type]?.actions;
+    a = [...a, ...l2];
+    if (fsi.fs_type === FsType.File && fsi.mimeType !== undefined) {
+      l3 =
+        contextMenuActions[cmt]?.subTypes?.[fsi.fs_type]?.subTypes?.[fsi.mimeType]?.actions ?? [];
+      a = [...a, ...l3];
+    }
+  }
+
+  if (multiple === true) {
+    a = a.filter((action) => action.multiple === true);
+  }
+
+  return a;
+};
+
+export const contextMenuActions: ContextMenuActions = {
+  [ContextMenuType.FileListRowItem]: {
+    actions: [
+      { title: "Copy", icon: "", type: ActionType.COPY, multiple: true },
+      { title: "Paste", icon: "", type: ActionType.PASTE, multiple: true },
+    ],
+    subTypes: {
+      [FsType.Directory]: {
+        actions: [],
+      },
+      [FsType.File]: {
+        actions: [],
+        subTypes: {
+          "application/javascript": {
+            actions: [],
+          },
+        },
+      },
+    },
+  },
 };
