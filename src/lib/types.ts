@@ -27,8 +27,8 @@ export interface Action {
   hotkey?: string;
 }
 export enum ActionType {
-  COPY = 0,
-  LOG = 5,
+  LOG = 0,
+  COPY = 5,
   PASTE = 10,
   CUT = 20,
   DELETE = 30,
@@ -79,6 +79,7 @@ export interface ContextMenuData {
 export enum ContextMenuType {
   ContextMenu = 0,
   FileListRowItem = 1,
+  FileList = 2,
 }
 
 export enum SelectionAction {

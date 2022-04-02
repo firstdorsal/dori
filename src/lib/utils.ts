@@ -25,9 +25,10 @@ export const getFsItemByDirname = (fsItems: FsItem[], dirname: string) => {
   for (let i = 0; i < fsItems.length; i++) {
     const fsi = fsItems[i];
     if (fsi.path === dirname) {
-      return fsi;
+      return [fsi, i] as const;
     }
   }
+  throw Error(`No fsi found for dirname: ${dirname}`);
 };
 
 export const getLastPartOfPath = (a: string) => {
@@ -341,6 +342,13 @@ export const getContextMenuActions = (cm: ContextMenuData) => {
   }
 
   return a;
+};
+
+export const getSelectedFiles = (fileList: FsItem[]) => {
+  const selectedFiles = fileList.filter((fsi) => {
+    return fsi.ui.selected === true;
+  });
+  return selectedFiles;
 };
 
 export const contextMenuActions: ContextMenuActions = {

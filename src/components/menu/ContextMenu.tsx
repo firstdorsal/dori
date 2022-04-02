@@ -1,10 +1,11 @@
 import { Component } from "react";
-import { Config, ContextMenuData, ContextMenuType } from "../../lib/types";
+import { Config, ContextMenuData, ContextMenuType, G } from "../../lib/types";
 import { getContextMenuActions } from "../../lib/utils";
 
 interface ContextMenuProps {
   readonly contextMenu: ContextMenuData;
   readonly config: Config;
+  readonly g: G;
 }
 interface ContextMenuState {}
 export default class ContextMenu extends Component<ContextMenuProps, ContextMenuState> {
@@ -20,7 +21,11 @@ export default class ContextMenu extends Component<ContextMenuProps, ContextMenu
       >
         <ol>
           {getContextMenuActions(cm).map((action) => {
-            return <li key={`action-${action.type}`}>{action.title}</li>;
+            return (
+              <li key={`action-${action.type}`} onClick={() => this.props.g.handleAction(action)}>
+                {action.title}
+              </li>
+            );
           })}
         </ol>
       </div>

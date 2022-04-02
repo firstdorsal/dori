@@ -16,9 +16,12 @@ import {
   getLastPartOfPath,
   isBookmarked,
   getFsItemByDirname,
+  getSelectedFiles,
 } from "./lib/utils";
 import "rsuite/dist/rsuite.min.css";
 import {
+  Action,
+  ActionType,
   Config,
   ContextMenuData,
   FileListMap,
@@ -64,6 +67,7 @@ interface AppState {
   readonly lastSelected: number;
   readonly lastSelectionAction: SelectionAction;
   readonly contextMenu: ContextMenuData | null;
+  readonly clipboard: FsItem[];
 }
 
 export class App extends PureComponent<{}, AppState> {
@@ -93,6 +97,7 @@ export class App extends PureComponent<{}, AppState> {
       lastSelected: -1,
       lastSelectionAction: SelectionAction.Single,
       contextMenu: null,
+      clipboard: [],
     };
     this.listRef = createRef();
     this.selectMultiplePressed = false;
@@ -532,7 +537,9 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   handleContextMenu = (e: any) => {
-    if (e.ctrlKey || e.shiftKey || e.altKey) return;
+    console.log(e);
+
+    if (e.target === null || e.ctrlKey || e.shiftKey || e.altKey) return;
 
     e.preventDefault();
 
@@ -541,19 +548,49 @@ export class App extends PureComponent<{}, AppState> {
     const id: string = target.id;
 
     if (ctxmtype === undefined || id === undefined) return;
+    console.log(ctxmtype);
 
     ctxmtype = parseInt(ctxmtype);
 
-    this.setState({
-      contextMenu: {
+    const [fsi, index] = getFsItemByDirname(this.state.fileListMap[this.state.currentDir.path], id);
+
+    this.setState(({ lastSelectionAction, fileListMap, lastSelected, currentDir, contextMenu }) => {
+      if (fsi.ui.selected === false) {
+        fileListMap = update(fileListMap, {
+          [currentDir.path]: {
+            $apply: (v: FsItem[]) =>
+              v.map((fsi) => {
+                fsi.ui.selected = false;
+                return fsi;
+              }),
+          },
+        });
+
+        fileListMap = update(fileListMap, {
+          [currentDir.path]: {
+            [index]: { ui: { selected: { $set: true } } },
+            ...(lastSelected !== -1 &&
+              lastSelected !== index && {
+                [lastSelected]: { ui: { selected: { $set: false } } },
+              }),
+          },
+        });
+      }
+      contextMenu = {
         x: pageX,
         y: pageY,
         type: ctxmtype,
         id,
-        fsi: getFsItemByDirname(this.state.fileListMap[this.state.currentDir.path], id),
-        multiple: this.state.lastSelectionAction === SelectionAction.Multiple,
+        fsi,
+        multiple: lastSelectionAction === SelectionAction.Multiple,
         dev: this.dev,
-      },
+      };
+
+      return {
+        lastSelected: index,
+        fileListMap,
+        contextMenu,
+      };
     });
   };
 
@@ -561,6 +598,122 @@ export class App extends PureComponent<{}, AppState> {
     document.removeEventListener("contextmenu", this.handleContextMenu);
     document.removeEventListener("click", this.handleClick);
     window.removeEventListener("blur", this.handleBlur);
+  };
+
+  handleAction = (action: Action) => {
+    console.log(action);
+
+    switch (action.type) {
+      case ActionType.LOG: {
+        const selected = getSelectedFiles(this.state.fileListMap[this.state.currentDir.path]);
+        console.log(selected);
+        break;
+      }
+      case ActionType.COPY: {
+        this.setState(({ fileListMap, currentDir }) => {
+          const selected = getSelectedFiles(fileListMap[currentDir.path]);
+
+          return {
+            clipboard: selected,
+          };
+        });
+        break;
+      }
+      case ActionType.PASTE: {
+        this.setState(({ clipboard, currentDir, fileListMap }) => {
+          console.log(currentDir, clipboard);
+        });
+        break;
+      }
+
+      case ActionType.CUT: {
+        break;
+      }
+      case ActionType.DELETE: {
+        break;
+      }
+      case ActionType.DUPLICATE: {
+        break;
+      }
+      case ActionType.COPY_PATH: {
+        break;
+      }
+      case ActionType.COPY_NAME: {
+        break;
+      }
+      case ActionType.EXECUTE: {
+        break;
+      }
+      case ActionType.OPEN_WITH: {
+        break;
+      }
+      case ActionType.RENAME: {
+        break;
+      }
+      case ActionType.EDIT_PERMS: {
+        break;
+      }
+      case ActionType.UNMOUNT_VOLUME: {
+        break;
+      }
+      case ActionType.DECRYPT: {
+        break;
+      }
+      case ActionType.ENCRYPT: {
+        break;
+      }
+      case ActionType.EXTRACT: {
+        break;
+      }
+      case ActionType.ARCHIVE: {
+        break;
+      }
+      case ActionType.PROPERTIES: {
+        break;
+      }
+      case ActionType.OPEN_TERMINAL: {
+        break;
+      }
+      case ActionType.RUN_IN_TERMINAL: {
+        break;
+      }
+      case ActionType.SQUOOSH_IMAGE: {
+        break;
+      }
+      case ActionType.SEND_VIA_MAIL: {
+        break;
+      }
+      case ActionType.QUICK_LOCAL_SHARE: {
+        break;
+      }
+      case ActionType.SQUOOSH_IMAGE_SEND_VIA_MAIL: {
+        break;
+      }
+      case ActionType.SYNC_WITH: {
+        break;
+      }
+      case ActionType.VALIDATE_CHECKSUM: {
+        break;
+      }
+      case ActionType.GIT_CLONE: {
+        break;
+      }
+      case ActionType.GIT_CLONE_INTO_HERE: {
+        break;
+      }
+      case ActionType.OPEN_REMOTE: {
+        break;
+      }
+      case ActionType.DOCKER_COMPOSE_UP: {
+        break;
+      }
+      case ActionType.DS: {
+        break;
+      }
+
+      default:
+        throw Error("Invalid action");
+    }
   };
 
   render = () => {
@@ -571,7 +724,11 @@ export class App extends PureComponent<{}, AppState> {
         <GlobalHotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers} />
         <DndProvider backend={HTML5Backend}>
           {this.state.contextMenu !== null && (
-            <ContextMenu config={this.state.config} contextMenu={this.state.contextMenu} />
+            <ContextMenu
+              g={this.g}
+              config={this.state.config}
+              contextMenu={this.state.contextMenu}
+            />
           )}
 
           <RenderPage
@@ -602,6 +759,7 @@ export class App extends PureComponent<{}, AppState> {
     updateConfig: this.updateConfig,
     bookmarkFolder: this.bookmarkFolder,
     updateDirByPath: this.updateDirByPath,
+    handleAction: this.handleAction,
   };
 }
 

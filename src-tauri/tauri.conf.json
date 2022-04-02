@@ -1,6 +1,6 @@
 {
   "package": {
-    "productName": "tauri-explorer",
+    "productName": "dori",
     "version": "0.1.0"
   },
   "build": {
@@ -51,7 +51,7 @@
     },
     "windows": [
       {
-        "title": "Tauri Explorer",
+        "title": "Dori",
         "width": 800,
         "height": 600,
         "resizable": true,

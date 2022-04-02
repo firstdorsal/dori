@@ -65,3 +65,13 @@ async fn read_text_file(path: String) -> String {
 async fn read_binary_file(path: String) -> Vec<u8> {
     fs::read(path).unwrap()
 }
+
+#[tauri::command]
+async fn write_text_file(path: String, text: String) {
+    fs::write(path, text).unwrap();
+}
+
+#[tauri::command]
+async fn copy_file_or_dir(src: String, dst: String) {
+    fs::copy(src, dst).unwrap();
+}

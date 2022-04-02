@@ -1,5 +1,5 @@
 import { CSSProperties, PureComponent } from "react";
-import { FsItem, G } from "../../lib/types";
+import { ContextMenuType, FsItem, G } from "../../lib/types";
 import FileListRow from "./FileListRow";
 import { App } from "../../App";
 import { FixedSizeList as List } from "react-window";
@@ -24,7 +24,12 @@ export default class FileList extends PureComponent<FileListProps, FileListState
     });
 
     return (
-      <div className="FileList">
+      <div
+        className="FileList"
+        /*@ts-ignore*/
+        ctxmtype={ContextMenuType.FileList}
+        // TODO add handle for e.target.offsetParent.attributes.ctxmtype
+      >
         <AutoSizer>
           {({ height, width }) => (
             <List
