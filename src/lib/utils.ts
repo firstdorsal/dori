@@ -372,4 +372,24 @@ export const contextMenuActions: ContextMenuActions = {
       },
     },
   },
+  [ContextMenuType.FileList]: {
+    actions: [
+      { title: "Copy", icon: "", type: ActionType.COPY, multiple: true },
+      { title: "Paste", icon: "", type: ActionType.PASTE, multiple: true },
+      { title: "Log", icon: "", type: ActionType.LOG, multiple: true, dev: true },
+    ],
+    subTypes: {
+      [FsType.Directory]: {
+        actions: [],
+      },
+      [FsType.File]: {
+        actions: [],
+        subTypes: {
+          "application/javascript": {
+            actions: [],
+          },
+        },
+      },
+    },
+  },
 };

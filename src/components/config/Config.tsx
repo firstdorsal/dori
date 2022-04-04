@@ -4,7 +4,7 @@ import Form from "@rjsf/core";
 import { configSchema } from "../../lib/configSchema";
 import { Config, Page } from "../../lib/types";
 import { defaultConfig } from "../../lib/utils";
-import { App } from "../../App";
+import { App } from "../../App/App";
 import CloseIcon from "mdi-react/CloseIcon";
 import ReloadAlertIcon from "mdi-react/ReloadAlertIcon";
 

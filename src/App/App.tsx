@@ -17,13 +17,14 @@ import {
   isBookmarked,
   getFsItemByDirname,
   getSelectedFiles,
-} from "./lib/utils";
+} from "../lib/utils";
 import "rsuite/dist/rsuite.min.css";
 import {
   Action,
   ActionType,
   Config,
   ContextMenuData,
+  ContextMenuType,
   FileListMap,
   FsItem,
   FsType,
@@ -31,25 +32,31 @@ import {
   Page,
   SelectionAction,
   UpdateFsItemOption,
-} from "./lib/types";
+} from "../lib/types";
 import update from "immutability-helper";
 
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { sortItems, SortMethod } from "./lib/sort";
+import { sortItems, SortMethod } from "../lib/sort";
 import { GlobalHotKeys, configure as configureHotkeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
 
-import ConfigComponent from "./components/config/Config";
+import ConfigComponent from "../components/config/Config";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Main } from "./components/main/Main";
-import Aside from "./components/aside/Aside";
+import { Main } from "../components/main/Main";
+import Aside from "../components/aside/Aside";
 import Split from "react-split";
 import { cloneDeep } from "lodash";
-import ContextMenu from "./components/menu/ContextMenu";
-import Menu from "./components/menu/Menu";
-import Preview from "./components/preview/Preview";
+import ContextMenu from "../components/menu/ContextMenu";
+import Menu from "../components/menu/Menu";
+import Preview from "../components/preview/Preview";
+import { handleContextMenuFileListRowItem } from "./handleContextMenu/FileListRowItem";
+import { handleContextMenuFileList } from "./handleContextMenu/FileList";
+import { handleAction } from "./handleActions/main";
+import { bookmarkFolder } from "./bookmark/bookmarkFolder";
+import { updateFsItems } from "./updateFsItems/updateFsItems";
+import { toggleHiddenFiles } from "./toggleHiddenFiles/toggleHiddenFiles";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -316,56 +323,7 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   toggleHiddenFiles = () => {
-    this.setState(
-      ({ fileListMap, currentDir, displayHiddenFiles, lastSelected }) => {
-        displayHiddenFiles = !displayHiddenFiles;
-
-        let selectCount = 0;
-        fileListMap = update(fileListMap, {
-          [currentDir.path]: {
-            $apply: (v: FsItem[]) =>
-              v.map((fsi) => {
-                if (isHiddenPath(fsi.path) === true) {
-                  fsi = cloneDeep(fsi);
-                  fsi.ui.display = displayHiddenFiles;
-                  if (displayHiddenFiles === false) {
-                    fsi.ui.selected = false;
-                  }
-                  return fsi;
-                } else {
-                  if (fsi.ui.selected) selectCount += 1;
-                }
-                return fsi;
-              }),
-          },
-        });
-
-        let firstVisibleItemIndex = -1;
-        if (displayHiddenFiles === false && selectCount === 0) {
-          for (let i = 0; i < fileListMap[currentDir.path].length; i++) {
-            let fsi = fileListMap[currentDir.path][i];
-            if (fsi.ui.display === true) {
-              firstVisibleItemIndex = i;
-              break;
-            }
-          }
-        }
-
-        if (firstVisibleItemIndex !== -1) {
-          lastSelected = firstVisibleItemIndex;
-          fileListMap = update(fileListMap, {
-            [currentDir.path]: {
-              [firstVisibleItemIndex]: { ui: { selected: { $set: true } } },
-            },
-          });
-        }
-
-        return { fileListMap, displayHiddenFiles, lastSelected };
-      },
-      () => {
-        this.scrollElementIntoView(this.state.lastSelected, "center");
-      }
-    );
+    toggleHiddenFiles(this);
   };
 
   writeConfig = async (configToWrite: Config, configPath: string) => {
@@ -425,110 +383,12 @@ export class App extends PureComponent<{}, AppState> {
   // TODO fix problems onblur hotkeys not selecting with ctrl on window loose focus and reenter
 
   updateFsItems = (index: number, option: UpdateFsItemOption) => {
-    this.setState(({ fileListMap, lastSelected, currentDir, lastSelectionAction }) => {
-      if (option === UpdateFsItemOption.Selected) {
-        if (this.selectMultiplePressed === true) {
-          fileListMap = update(fileListMap, {
-            [currentDir.path]: {
-              [index]: { ui: { selected: { $apply: (s) => !s } } },
-            },
-          });
-          lastSelectionAction = SelectionAction.Multiple;
-        } else if (this.selectFromToPressed === true) {
-          fileListMap = update(fileListMap, {
-            [currentDir.path]: {
-              $apply: (v: FsItem[]) =>
-                v.map((fsi, i) => {
-                  if (i <= Math.max(lastSelected, index) && i >= Math.min(lastSelected, index)) {
-                    fsi.ui.selected = true;
-                  }
-                  return fsi;
-                }),
-            },
-          });
-          lastSelectionAction = SelectionAction.Multiple;
-        } else {
-          // handle a single select click
-          // deselect all if the last action selected multiple items
-          if (lastSelectionAction === SelectionAction.Multiple) {
-            fileListMap = update(fileListMap, {
-              [currentDir.path]: {
-                $apply: (v: FsItem[]) =>
-                  v.map((fsi) => {
-                    fsi.ui.selected = false;
-                    return fsi;
-                  }),
-              },
-            });
-          }
-          fileListMap = update(fileListMap, {
-            [currentDir.path]: {
-              [index]: { ui: { selected: { $set: true } } },
-              ...(lastSelected !== -1 &&
-                lastSelected !== index && {
-                  [lastSelected]: { ui: { selected: { $set: false } } },
-                }),
-            },
-          });
-
-          lastSelectionAction = SelectionAction.Single;
-        }
-      } else if (option === UpdateFsItemOption.SelectAll) {
-        fileListMap = update(fileListMap, {
-          [currentDir.path]: {
-            $apply: (v: FsItem[]) =>
-              v.map((fsi) => {
-                fsi.ui.selected = true;
-                return fsi;
-              }),
-          },
-        });
-        lastSelectionAction = SelectionAction.Multiple;
-      }
-
-      return { fileListMap, lastSelected: index, lastSelectionAction };
-    });
+    updateFsItems(this, index, option);
   };
 
   bookmarkFolder = (folder?: FsItem) => {
-    if (folder === undefined) folder = this.state.currentDir;
-    let newConfig;
-    if (!this.state.config) return;
-    if (isBookmarked(folder, this.state.config) === false) {
-      let name = getLastPartOfPath(folder.path);
-      if (name.length === 0) {
-        name = this.state.hostname;
-      }
-      newConfig = update(this.state.config, {
-        bookmarks: {
-          list: {
-            $push: [{ icon: "", location: folder.path, name }],
-          },
-        },
-      });
-    } else {
-      newConfig = update(this.state.config, {
-        bookmarks: {
-          list: {
-            $apply: (
-              v: {
-                location: string;
-                name: string;
-                icon: string;
-              }[]
-            ) =>
-              v.filter((bm) => {
-                return bm.location !== folder?.path;
-              }),
-          },
-        },
-      });
-    }
-    if (newConfig === null) return;
-    this.updateConfig(newConfig);
+    bookmarkFolder(this, folder);
   };
-
-  addToFavorites = () => {};
 
   handleClick = (e: any) => {
     this.setState({
@@ -537,61 +397,30 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   handleContextMenu = (e: any) => {
-    console.log(e);
-
     if (e.target === null || e.ctrlKey || e.shiftKey || e.altKey) return;
 
     e.preventDefault();
 
     const { pageX, pageY, target } = e;
-    let ctxmtype = target.attributes?.ctxmtype?.value;
-    const id: string = target.id;
-
+    let ctxmtype =
+      target?.attributes?.ctxmtype?.value ?? target?.offsetParent?.attributes?.ctxmtype?.value;
+    const id: string = target?.id;
     if (ctxmtype === undefined || id === undefined) return;
-    console.log(ctxmtype);
 
     ctxmtype = parseInt(ctxmtype);
-
-    const [fsi, index] = getFsItemByDirname(this.state.fileListMap[this.state.currentDir.path], id);
-
-    this.setState(({ lastSelectionAction, fileListMap, lastSelected, currentDir, contextMenu }) => {
-      if (fsi.ui.selected === false) {
-        fileListMap = update(fileListMap, {
-          [currentDir.path]: {
-            $apply: (v: FsItem[]) =>
-              v.map((fsi) => {
-                fsi.ui.selected = false;
-                return fsi;
-              }),
-          },
-        });
-
-        fileListMap = update(fileListMap, {
-          [currentDir.path]: {
-            [index]: { ui: { selected: { $set: true } } },
-            ...(lastSelected !== -1 &&
-              lastSelected !== index && {
-                [lastSelected]: { ui: { selected: { $set: false } } },
-              }),
-          },
-        });
+    switch (ctxmtype) {
+      case ContextMenuType.FileListRowItem: {
+        handleContextMenuFileListRowItem(this, id, pageX, pageY);
+        break;
       }
-      contextMenu = {
-        x: pageX,
-        y: pageY,
-        type: ctxmtype,
-        id,
-        fsi,
-        multiple: lastSelectionAction === SelectionAction.Multiple,
-        dev: this.dev,
-      };
-
-      return {
-        lastSelected: index,
-        fileListMap,
-        contextMenu,
-      };
-    });
+      case ContextMenuType.FileList: {
+        handleContextMenuFileList(this, id, pageX, pageY);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
   };
 
   componentWillUnmount = () => {
@@ -601,119 +430,7 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   handleAction = (action: Action) => {
-    console.log(action);
-
-    switch (action.type) {
-      case ActionType.LOG: {
-        const selected = getSelectedFiles(this.state.fileListMap[this.state.currentDir.path]);
-        console.log(selected);
-        break;
-      }
-      case ActionType.COPY: {
-        this.setState(({ fileListMap, currentDir }) => {
-          const selected = getSelectedFiles(fileListMap[currentDir.path]);
-
-          return {
-            clipboard: selected,
-          };
-        });
-        break;
-      }
-      case ActionType.PASTE: {
-        this.setState(({ clipboard, currentDir, fileListMap }) => {
-          console.log(currentDir, clipboard);
-        });
-        break;
-      }
-
-      case ActionType.CUT: {
-        break;
-      }
-      case ActionType.DELETE: {
-        break;
-      }
-      case ActionType.DUPLICATE: {
-        break;
-      }
-      case ActionType.COPY_PATH: {
-        break;
-      }
-      case ActionType.COPY_NAME: {
-        break;
-      }
-      case ActionType.EXECUTE: {
-        break;
-      }
-      case ActionType.OPEN_WITH: {
-        break;
-      }
-      case ActionType.RENAME: {
-        break;
-      }
-      case ActionType.EDIT_PERMS: {
-        break;
-      }
-      case ActionType.UNMOUNT_VOLUME: {
-        break;
-      }
-      case ActionType.DECRYPT: {
-        break;
-      }
-      case ActionType.ENCRYPT: {
-        break;
-      }
-      case ActionType.EXTRACT: {
-        break;
-      }
-      case ActionType.ARCHIVE: {
-        break;
-      }
-      case ActionType.PROPERTIES: {
-        break;
-      }
-      case ActionType.OPEN_TERMINAL: {
-        break;
-      }
-      case ActionType.RUN_IN_TERMINAL: {
-        break;
-      }
-      case ActionType.SQUOOSH_IMAGE: {
-        break;
-      }
-      case ActionType.SEND_VIA_MAIL: {
-        break;
-      }
-      case ActionType.QUICK_LOCAL_SHARE: {
-        break;
-      }
-      case ActionType.SQUOOSH_IMAGE_SEND_VIA_MAIL: {
-        break;
-      }
-      case ActionType.SYNC_WITH: {
-        break;
-      }
-      case ActionType.VALIDATE_CHECKSUM: {
-        break;
-      }
-      case ActionType.GIT_CLONE: {
-        break;
-      }
-      case ActionType.GIT_CLONE_INTO_HERE: {
-        break;
-      }
-      case ActionType.OPEN_REMOTE: {
-        break;
-      }
-      case ActionType.DOCKER_COMPOSE_UP: {
-        break;
-      }
-      case ActionType.DS: {
-        break;
-      }
-
-      default:
-        throw Error("Invalid action");
-    }
+    handleAction(this, action);
   };
 
   render = () => {

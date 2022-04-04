@@ -1,4 +1,4 @@
-import { Config, ContextMenuType, FsItem, G } from "../../lib/types";
+import { Config, FsItem, G } from "../../lib/types";
 import FileList from "./FileList";
 
 export const Main = (props: {

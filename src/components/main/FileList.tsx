@@ -1,7 +1,6 @@
 import { CSSProperties, PureComponent } from "react";
 import { ContextMenuType, FsItem, G } from "../../lib/types";
 import FileListRow from "./FileListRow";
-import { App } from "../../App";
 import { FixedSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 

@@ -1,5 +1,5 @@
 import { FromSchema } from "json-schema-to-ts";
-import { App } from "../App";
+import { App } from "../App/App";
 import { configSchema } from "./configSchema";
 
 export interface ContextMenuActions {
@@ -78,8 +78,10 @@ export interface ContextMenuData {
 
 export enum ContextMenuType {
   ContextMenu = 0,
-  FileListRowItem = 1,
-  FileList = 2,
+  FileListRowItem = 10,
+  FileList = 20,
+  Bookmark = 30,
+  Breadcrumb = 40,
 }
 
 export enum SelectionAction {

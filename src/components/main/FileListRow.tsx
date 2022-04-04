@@ -1,5 +1,4 @@
 import { CSSProperties, PureComponent } from "react";
-import { App } from "../../App";
 import { FsItem, G } from "../../lib/types";
 import FsItemComponent from "../common/FsItemComponent";
 
@@ -18,7 +17,7 @@ export default class FileListRow extends PureComponent<FileListRowProps, FileLis
           listIndex={this.props.listIndex}
           g={this.props.g}
           fsItem={this.props.fsItem}
-        ></FsItemComponent>
+        />
       </div>
     );
   };
