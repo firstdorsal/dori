@@ -10,18 +10,12 @@ import {
   getHotkeys,
   getNearestVisible,
   getParentPath,
-  isHiddenPath,
   getMergedFileList,
   readDir,
-  getLastPartOfPath,
-  isBookmarked,
-  getFsItemByDirname,
-  getSelectedFiles,
 } from "../lib/utils";
 import "rsuite/dist/rsuite.min.css";
 import {
   Action,
-  ActionType,
   Config,
   ContextMenuData,
   ContextMenuType,
@@ -47,7 +41,6 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { Main } from "../components/main/Main";
 import Aside from "../components/aside/Aside";
 import Split from "react-split";
-import { cloneDeep } from "lodash";
 import ContextMenu from "../components/menu/ContextMenu";
 import Menu from "../components/menu/Menu";
 import Preview from "../components/preview/Preview";
@@ -57,6 +50,7 @@ import { handleAction } from "./handleActions/main";
 import { bookmarkFolder } from "./bookmark/bookmarkFolder";
 import { updateFsItems } from "./updateFsItems/updateFsItems";
 import { toggleHiddenFiles } from "./toggleHiddenFiles/toggleHiddenFiles";
+import Titlebar from "../components/titlebar/Titlebar";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -438,6 +432,7 @@ export class App extends PureComponent<{}, AppState> {
 
     return (
       <div className="App">
+        <Titlebar></Titlebar>
         <GlobalHotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers} />
         <DndProvider backend={HTML5Backend}>
           {this.state.contextMenu !== null && (

@@ -1,3 +1,15 @@
+* {
+  /*outline: 1px solid red;*/
+  box-sizing: border-box;
+  /*-webkit-user-select: none;*/
+  outline: none;
+  /*-webkit-user-drag: none;*/
+  --titlebar-height: 30px;
+  --urlbar-height: 30px;
+  --menu-height: 35px;
+  --hover: #00000011;
+}
+
 html,
 body {
   height: 100%;
@@ -30,14 +42,6 @@ ul {
 a {
   text-decoration: none !important;
   cursor: pointer;
-}
-
-* {
-  /*outline: 1px solid red;*/
-  box-sizing: border-box;
-  /*-webkit-user-select: none;*/
-  outline: none;
-  /*-webkit-user-drag: none;*/
 }
 
 #root {
@@ -123,8 +127,8 @@ form.rjsf {
   }
 
   input:focus {
-    -webkit-box-shadow: 0 0 0 3px rgb(52 152 255 / 25%);
-    box-shadow: 0 0 0 3px rgb(52 152 255 / 25%);
+    -webkit-box-shadow: 0 0 0 3px #3498ff40;
+    box-shadow: 0 0 0 3px #3498ff40;
     -webkit-box-shadow: var(--rs-state-focus-shadow);
     box-shadow: var(--rs-state-focus-shadow);
   }
@@ -201,15 +205,15 @@ form.rjsf {
   margin-top: 5px;
   margin-bottom: 5px;
   padding-top: 3px;
-  height: 35px;
+  height: var(--menu-height);
 }
 
 .FileList {
   overflow: scroll;
-  height: calc(100vh - 45px);
+  height: calc(100vh - calc(var(--menu-height) + var(--titlebar-height)));
 }
 .FileListRow:hover {
-  background: #00000011;
+  background: var(--hover);
 }
 
 .FileListRowItem div {
@@ -252,7 +256,7 @@ form.rjsf {
 
 .UrlBar {
   display: inline-block;
-  height: 30px;
+  height: var(--urlbar-height);
   width: calc(100% - 220px);
   padding-left: 10px;
   vertical-align: -4px;
@@ -311,4 +315,28 @@ form.rjsf {
 
 .Preview {
   z-index: 2;
+}
+
+.Titlebar {
+  height: var(--titlebar-height);
+  .titlebar {
+    background: white;
+    user-select: none;
+    display: flex;
+    justify-content: flex-end;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  .titlebar-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+  }
+  .titlebar-button:hover {
+    background: var(--hover);
+  }
 }
