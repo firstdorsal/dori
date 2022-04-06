@@ -10,7 +10,7 @@ import {
   getHotkeys,
   getNearestVisible,
   getParentPath,
-  getMergedFileList,
+  getMergedFileList as mergeNewFileList,
   readDir,
 } from "../lib/utils";
 import "rsuite/dist/rsuite.min.css";
@@ -46,7 +46,7 @@ import Menu from "../components/menu/Menu";
 import Preview from "../components/preview/Preview";
 import { handleContextMenuFileListRowItem } from "./handleContextMenu/FileListRowItem";
 import { handleContextMenuFileList } from "./handleContextMenu/FileList";
-import { handleAction } from "./handleActions/main";
+import { handleAction } from "./handleActions/handleActions";
 import { bookmarkFolder } from "./bookmark/bookmarkFolder";
 import { updateFsItems } from "./updateFsItems/updateFsItems";
 import { toggleHiddenFiles } from "./toggleHiddenFiles/toggleHiddenFiles";
@@ -69,6 +69,7 @@ interface AppState {
   readonly lastSelectionAction: SelectionAction;
   readonly contextMenu: ContextMenuData | null;
   readonly clipboard: FsItem[];
+  readonly focus: boolean;
 }
 
 export class App extends PureComponent<{}, AppState> {
@@ -99,6 +100,7 @@ export class App extends PureComponent<{}, AppState> {
       lastSelectionAction: SelectionAction.Single,
       contextMenu: null,
       clipboard: [],
+      focus: false,
     };
     this.listRef = createRef();
     this.selectMultiplePressed = false;
@@ -136,18 +138,14 @@ export class App extends PureComponent<{}, AppState> {
           historyIndex = newIndex;
         }
         // TODO update the visisble lines before the rest
-        // TODO
-        // merge the updated list with the saved list
-        // updates the items that have changed in the fs but keeps the ui related ones
-        const currentFileList = fileListMap[newDirPath];
-        let mergedFileList = currentFileList;
-        if (mergedFileList === undefined) {
-          mergedFileList = newFileList;
+
+        if (fileListMap[newDirPath] === undefined) {
+          fileListMap = update(fileListMap, { $set: { [newDirPath]: newFileList } });
         } else {
-          mergedFileList = getMergedFileList(currentFileList, newFileList);
+          fileListMap = mergeNewFileList(fileListMap, currentDir, newFileList);
         }
 
-        fileListMap[newDirPath] = sortItems(mergedFileList, SortMethod.Alphabetic);
+        fileListMap[newDirPath] = sortItems(fileListMap[newDirPath], SortMethod.Alphabetic);
 
         const [length, firstVisibleItemIndex] = countSelected(fileListMap[newDirPath]);
 
@@ -178,17 +176,34 @@ export class App extends PureComponent<{}, AppState> {
     );
   };
 
-  handleBlur = () => {};
+  handleBlur = () => {
+    this.setState({
+      focus: false,
+    });
+  };
+  handleFocus = () => {
+    this.setState({
+      focus: true,
+    });
+  };
 
   componentDidMount = async () => {
     document.addEventListener("contextmenu", this.handleContextMenu);
     document.addEventListener("click", this.handleClick);
     window.addEventListener("blur", this.handleBlur);
+    window.addEventListener("focus", this.handleFocus);
 
     const hostname: string = await invoke("get_hostname");
     const config = await this.loadConfig();
     this.setState({ hostname, config });
     await this.updateDir(this.state.currentDir);
+  };
+
+  componentWillUnmount = () => {
+    document.removeEventListener("contextmenu", this.handleContextMenu);
+    document.removeEventListener("click", this.handleClick);
+    window.removeEventListener("blur", this.handleBlur);
+    window.removeEventListener("focus", this.handleFocus);
   };
 
   goUpDirectory = () => {
@@ -417,12 +432,6 @@ export class App extends PureComponent<{}, AppState> {
     }
   };
 
-  componentWillUnmount = () => {
-    document.removeEventListener("contextmenu", this.handleContextMenu);
-    document.removeEventListener("click", this.handleClick);
-    window.removeEventListener("blur", this.handleBlur);
-  };
-
   handleAction = (action: Action) => {
     handleAction(this, action);
   };
@@ -431,7 +440,7 @@ export class App extends PureComponent<{}, AppState> {
     if (this.state.config === null) return <div></div>;
 
     return (
-      <div className="App">
+      <div className={`App${this.state.focus ? " focus" : " blur"}`}>
         <Titlebar></Titlebar>
         <GlobalHotKeys keyMap={getHotkeys(this.state.config)} handlers={this.hotkeyHandlers} />
         <DndProvider backend={HTML5Backend}>

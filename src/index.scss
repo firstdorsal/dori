@@ -8,6 +8,7 @@
   --urlbar-height: 30px;
   --menu-height: 35px;
   --hover: #00000011;
+  scroll-behavior: none;
 }
 
 html,
@@ -28,6 +29,14 @@ body {
   overflow: hidden;
   -webkit-user-select: none;
   -webkit-user-drag: none;
+}
+
+.blur {
+  opacity: 0.9;
+}
+
+.focus {
+  opacity: 1;
 }
 
 ol,
@@ -209,7 +218,7 @@ form.rjsf {
 }
 
 .FileList {
-  overflow: scroll;
+  overflow: auto;
   height: calc(100vh - calc(var(--menu-height) + var(--titlebar-height)));
 }
 .FileListRow:hover {
@@ -309,6 +318,9 @@ form.rjsf {
     display: block;
     li {
       padding: 0px 5px;
+    }
+    li:hover {
+      background: var(--hover);
     }
   }
 }

@@ -12,7 +12,9 @@ fn main() {
             read_dir,
             get_hostname,
             read_text_file,
-            read_binary_file
+            read_binary_file,
+            write_text_file,
+            copy
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -72,6 +74,8 @@ async fn write_text_file(path: String, text: String) {
 }
 
 #[tauri::command]
-async fn copy_file_or_dir(src: String, dst: String) {
-    fs::copy(src, dst).unwrap();
+async fn copy(src: String, dst: String) -> Result<String, String> {
+    fs::copy(src, dst)
+        .map_err(|e| e.to_string())
+        .map(|r| r.to_string())
 }

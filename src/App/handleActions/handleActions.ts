@@ -1,8 +1,9 @@
 import { App } from "../App";
 import { Action, ActionType, ContextMenuType } from "../../lib/types";
 import { getSelectedFiles } from "../../lib/utils";
+import { copy } from "../../lib/system/copy";
 
-export const handleAction = (t: App, action: Action) => {
+export const handleAction = async (t: App, action: Action, undo = false) => {
   switch (action.type) {
     case ActionType.LOG: {
       let selected;
@@ -11,7 +12,6 @@ export const handleAction = (t: App, action: Action) => {
       } else if (t.state.contextMenu?.type === ContextMenuType.FileList) {
         selected = t.state.currentDir;
       }
-
       console.log(selected);
       break;
     }
@@ -26,9 +26,10 @@ export const handleAction = (t: App, action: Action) => {
       break;
     }
     case ActionType.PASTE: {
-      t.setState(({ clipboard, currentDir, fileListMap }) => {
-        console.log(currentDir, clipboard);
+      t.state.clipboard.forEach(async (fsi) => {
+        await copy(fsi.path, t.state.currentDir.path);
       });
+      await t.reloadDirectory();
       break;
     }
 

@@ -1,5 +1,8 @@
 import { PureComponent } from "react";
 import { appWindow } from "@tauri-apps/api/window";
+import CloseIcon from "mdi-react/CloseIcon";
+import MinimizeIcon from "mdi-react/WindowMinimizeIcon";
+import MaximizeIcon from "mdi-react/WindowMaximizeIcon";
 
 interface TitlebarProps {}
 interface TitlebarState {}
@@ -18,17 +21,17 @@ export default class Titlebar extends PureComponent<TitlebarProps, TitlebarState
             id="titlebar-minimize"
             onClick={() => appWindow.minimize()}
           >
-            <img src="https://api.iconify.design/mdi:window-minimize.svg" alt="minimize" />
+            <MinimizeIcon />
           </div>
           <div
             className="titlebar-button"
             id="titlebar-maximize"
             onClick={() => appWindow.toggleMaximize()}
           >
-            <img src="https://api.iconify.design/mdi:window-maximize.svg" alt="maximize" />
+            <MaximizeIcon />
           </div>
           <div className="titlebar-button" id="titlebar-close" onClick={() => appWindow.close()}>
-            <img src="https://api.iconify.design/mdi:close.svg" alt="close" />
+            <CloseIcon />
           </div>
         </div>
       </div>

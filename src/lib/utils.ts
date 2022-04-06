@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api";
 import { cloneDeep } from "lodash";
+import update from "immutability-helper";
+
 import mime from "mime";
 import {
   Action,
@@ -266,8 +268,30 @@ export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string
   return fileListMap[currentPath];
 };
 
-export const getMergedFileList = (currentFileList: FsItem[], newFileList: FsItem[]): FsItem[] => {
-  return currentFileList;
+export const getMergedFileList = (
+  fileListMap: FileListMap,
+  currentDir: FsItem,
+  newFileList: FsItem[]
+) => {
+  return update(fileListMap, {
+    [currentDir.path]: {
+      $apply: (currentFileList: FsItem[]) =>
+        newFileList.map((newFsi) => {
+          const currentFsItem = currentFileList.find(
+            (currentFsi) => currentFsi.path === newFsi.path
+          );
+
+          if (currentFsItem === undefined) {
+            return newFsi;
+          }
+
+          return {
+            ...newFsi,
+            ui: { ...currentFsItem.ui },
+          };
+        }),
+    },
+  });
 };
 
 export enum Direction {
