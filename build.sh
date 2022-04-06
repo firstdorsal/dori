@@ -3,5 +3,5 @@ yarn tauri build --debug
 #/home/paul/Documents/tauri-file-explorer/src-tauri/target/debug/bundle/appimage/tauri-app_0.1.0_amd64.AppImage
 
 
-chmod 700 /home/paul/Documents/tauri-explorer/src-tauri/target/debug/tauri-explorer
-/home/paul/Documents/tauri-explorer/src-tauri/target/debug/tauri-explorer
+chmod 700 /home/paul/Documents/dori/src-tauri/target/debug/dori
+/home/paul/Documents/dori/src-tauri/target/debug/dori

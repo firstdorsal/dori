@@ -1,4 +1,4 @@
-import { createRef, Fragment, PureComponent } from "react";
+import { createRef, PureComponent } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
   arrayUntil,
@@ -16,13 +16,14 @@ import {
 import "rsuite/dist/rsuite.min.css";
 import {
   Action,
+  ClipboardType,
   Config,
   ContextMenuData,
   ContextMenuType,
   FileListMap,
   FsItem,
   FsType,
-  G,
+  Modal,
   Page,
   SelectionAction,
   UpdateFsItemOption,
@@ -35,15 +36,9 @@ import { GlobalHotKeys, configure as configureHotkeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
 
-import ConfigComponent from "../components/config/Config";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Main } from "../components/main/Main";
-import Aside from "../components/aside/Aside";
-import Split from "react-split";
 import ContextMenu from "../components/menu/ContextMenu";
-import Menu from "../components/menu/Menu";
-import Preview from "../components/preview/Preview";
 import { handleContextMenuFileListRowItem } from "./handleContextMenu/FileListRowItem";
 import { handleContextMenuFileList } from "./handleContextMenu/FileList";
 import { handleAction } from "./handleActions/handleActions";
@@ -51,6 +46,7 @@ import { bookmarkFolder } from "./bookmark/bookmarkFolder";
 import { updateFsItems } from "./updateFsItems/updateFsItems";
 import { toggleHiddenFiles } from "./toggleHiddenFiles/toggleHiddenFiles";
 import Titlebar from "../components/titlebar/Titlebar";
+import { RenderPage } from "./RenderPage";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -70,6 +66,8 @@ interface AppState {
   readonly contextMenu: ContextMenuData | null;
   readonly clipboard: FsItem[];
   readonly focus: boolean;
+  readonly clipBoardType: ClipboardType;
+  readonly modal: Modal;
 }
 
 export class App extends PureComponent<{}, AppState> {
@@ -101,6 +99,8 @@ export class App extends PureComponent<{}, AppState> {
       contextMenu: null,
       clipboard: [],
       focus: false,
+      clipBoardType: ClipboardType.Copy,
+      modal: Modal.None,
     };
     this.listRef = createRef();
     this.selectMultiplePressed = false;
@@ -483,61 +483,3 @@ export class App extends PureComponent<{}, AppState> {
     handleAction: this.handleAction,
   };
 }
-
-const RenderPage = (props: {
-  page: Page;
-  g: G;
-  config: Config;
-  listRef: any;
-  currentDir: FsItem;
-  hostname: string;
-  preview: FsItem | null;
-  fileList: FsItem[];
-}) => {
-  switch (props.page) {
-    case "config": {
-      return (
-        <ConfigComponent
-          updatePage={props.g.updatePage}
-          config={props.config}
-          updateConfig={props.g.updateConfig}
-        />
-      );
-    }
-    case "main": {
-      return (
-        <Fragment>
-          <Menu
-            hostname={props.hostname}
-            config={props.config}
-            currentDir={props.currentDir}
-            g={props.g}
-          />
-          <Split
-            className="split"
-            sizes={[10, 70, 20]}
-            minSize={[100, 300, 100]}
-            gutterSize={5}
-            snapOffset={0}
-          >
-            <Aside g={props.g} config={props.config} />
-
-            <Main
-              g={props.g}
-              listRef={props.listRef}
-              currentDir={props.currentDir}
-              hostname={props.hostname}
-              preview={props.preview}
-              fileList={props.fileList}
-              config={props.config}
-            />
-            <Preview fsi={props.preview} />
-          </Split>
-        </Fragment>
-      );
-    }
-    default: {
-      return <div>Error</div>;
-    }
-  }
-};

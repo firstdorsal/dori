@@ -14,6 +14,7 @@ import {
   FsItem,
   FsType,
 } from "./types";
+import { contextMenuActions } from "./contextMenu/contextMenu";
 
 export const isBookmarked = (fsi: FsItem, config: Config) => {
   for (let i = 0; i < config.bookmarks.list.length; i++) {
@@ -255,6 +256,7 @@ export const defaultFsItem = {
     selected: false,
     display: true,
     bookmarked: false,
+    editable: false,
   },
   path: "",
   fs_type: "",
@@ -373,47 +375,4 @@ export const getSelectedFiles = (fileList: FsItem[]) => {
     return fsi.ui.selected === true;
   });
   return selectedFiles;
-};
-
-export const contextMenuActions: ContextMenuActions = {
-  [ContextMenuType.FileListRowItem]: {
-    actions: [
-      { title: "Copy", icon: "", type: ActionType.COPY, multiple: true },
-      { title: "Paste", icon: "", type: ActionType.PASTE, multiple: true },
-      { title: "Log", icon: "", type: ActionType.LOG, multiple: true, dev: true },
-    ],
-    subTypes: {
-      [FsType.Directory]: {
-        actions: [],
-      },
-      [FsType.File]: {
-        actions: [],
-        subTypes: {
-          "application/javascript": {
-            actions: [],
-          },
-        },
-      },
-    },
-  },
-  [ContextMenuType.FileList]: {
-    actions: [
-      { title: "Copy", icon: "", type: ActionType.COPY, multiple: true },
-      { title: "Paste", icon: "", type: ActionType.PASTE, multiple: true },
-      { title: "Log", icon: "", type: ActionType.LOG, multiple: true, dev: true },
-    ],
-    subTypes: {
-      [FsType.Directory]: {
-        actions: [],
-      },
-      [FsType.File]: {
-        actions: [],
-        subTypes: {
-          "application/javascript": {
-            actions: [],
-          },
-        },
-      },
-    },
-  },
 };

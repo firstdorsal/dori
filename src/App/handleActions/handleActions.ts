@@ -1,7 +1,16 @@
 import { App } from "../App";
-import { Action, ActionType, ContextMenuType } from "../../lib/types";
+import {
+  Action,
+  ActionType,
+  ClipboardType,
+  ContextMenuType,
+  FsItem,
+  SelectionAction,
+} from "../../lib/types";
 import { getSelectedFiles } from "../../lib/utils";
 import { copy } from "../../lib/system/copy";
+import { deleteItem } from "../../lib/system/delete";
+import update from "immutability-helper";
 
 export const handleAction = async (t: App, action: Action, undo = false) => {
   switch (action.type) {
@@ -21,24 +30,90 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
 
         return {
           clipboard: selected,
+          clipBoardType: ClipboardType.Copy,
         };
       });
       break;
     }
     case ActionType.PASTE: {
-      t.state.clipboard.forEach(async (fsi) => {
-        await copy(fsi.path, t.state.currentDir.path);
+      const copyHandles: Promise<any>[] = [];
+      t.state.clipboard.forEach((fsi) => {
+        copyHandles.push(copy(fsi.path, t.state.currentDir.path));
       });
+
+      try {
+        await Promise.all(copyHandles);
+        if (t.state.clipBoardType === ClipboardType.Cut) {
+          // TODO handle delete
+        }
+      } catch (error) {
+        // TODO add to some output channel
+      }
+
       await t.reloadDirectory();
       break;
     }
 
     case ActionType.CUT: {
+      t.setState(({ fileListMap, currentDir }) => {
+        const selected = getSelectedFiles(fileListMap[currentDir.path]);
+
+        return {
+          clipboard: selected,
+          clipBoardType: ClipboardType.Cut,
+        };
+      });
+
+      break;
+    }
+    case ActionType.RENAME_INIT: {
+      /*
+      enter comitted
+      esc aborted
+      aus dem feld klicken comitted
+      
+      */
+      t.setState(({ fileListMap, currentDir, lastSelectionAction }) => {
+        if (lastSelectionAction === SelectionAction.Single) {
+          fileListMap = update(fileListMap, {
+            [currentDir.path]: {
+              $apply: (v: FsItem[]) =>
+                v.map((fsi, i) => {
+                  if (fsi.ui.selected) {
+                    fsi.ui.editable = true;
+                  }
+                  return fsi;
+                }),
+            },
+          });
+        }
+        return {
+          fileListMap,
+        };
+      });
+      break;
+    }
+    case ActionType.NEW_FOLDER: {
+      break;
+    }
+    case ActionType.NEW_FILE: {
       break;
     }
     case ActionType.DELETE: {
+      const selected = getSelectedFiles(t.state.fileListMap[t.state.currentDir.path]);
+      const deleteHandles: Promise<any>[] = [];
+
+      selected.forEach((fsi) => {
+        deleteHandles.push(deleteItem(fsi));
+      });
+
+      await Promise.all(deleteHandles);
+
+      await t.reloadDirectory();
+
       break;
     }
+
     case ActionType.DUPLICATE: {
       break;
     }
@@ -54,9 +129,7 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
     case ActionType.OPEN_WITH: {
       break;
     }
-    case ActionType.RENAME: {
-      break;
-    }
+
     case ActionType.EDIT_PERMS: {
       break;
     }

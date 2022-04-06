@@ -32,7 +32,7 @@ body {
 }
 
 .blur {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .focus {
@@ -220,16 +220,25 @@ form.rjsf {
 .FileList {
   overflow: auto;
   height: calc(100vh - calc(var(--menu-height) + var(--titlebar-height)));
-}
-.FileListRow:hover {
-  background: var(--hover);
-}
+  .FileListRow:hover {
+    background: var(--hover);
+  }
 
-.FileListRowItem div {
-  margin-left: 7px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow-x: hidden;
+  .FileListRowItem {
+    input {
+      all: unset;
+      width: 100%;
+      display: block;
+      user-select: contain;
+      -webkit-user-select: auto;
+    }
+    div {
+      margin-left: 7px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow-x: hidden;
+    }
+  }
 }
 
 .ContextMenu {
@@ -351,4 +360,15 @@ form.rjsf {
   .titlebar-button:hover {
     background: var(--hover);
   }
+}
+
+div.rs-anim-bounce-in,
+div.rs-anim-bounce-out {
+  animation-duration: 0.1s !important;
+}
+
+div.rs-modal-backdrop,
+div.rs-modal-wrapper {
+  top: var(--titlebar-height);
+  height: calc(100vh - var(--titlebar-height));
 }

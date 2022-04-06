@@ -2,6 +2,16 @@ import { FromSchema } from "json-schema-to-ts";
 import { App } from "../App/App";
 import { configSchema } from "./configSchema";
 
+export enum Modal {
+  None,
+  Rename,
+}
+
+export enum ClipboardType {
+  Copy,
+  Cut,
+}
+
 export interface ContextMenuActions {
   [x: number]: {
     actions: Action[];
@@ -23,41 +33,45 @@ export interface Action {
   title: string;
   icon: string;
   multiple: boolean;
-  dev?: boolean;
+  dev: boolean;
   hotkey?: string;
 }
 export enum ActionType {
-  LOG = 0,
-  COPY = 5,
-  PASTE = 10,
-  CUT = 20,
-  DELETE = 30,
-  DUPLICATE = 40,
-  COPY_PATH = 50,
-  COPY_NAME = 60,
-  EXECUTE = 70,
-  OPEN_WITH = 80,
-  RENAME = 90,
-  EDIT_PERMS = 100,
-  UNMOUNT_VOLUME = 110,
-  DECRYPT = 120,
-  ENCRYPT = 130,
-  EXTRACT = 140,
-  ARCHIVE = 150,
-  PROPERTIES = 160,
-  OPEN_TERMINAL = 170,
-  RUN_IN_TERMINAL = 180,
-  SQUOOSH_IMAGE = 190,
-  SEND_VIA_MAIL = 200,
-  QUICK_LOCAL_SHARE = 210,
-  SQUOOSH_IMAGE_SEND_VIA_MAIL = 220,
-  SYNC_WITH = 230,
-  VALIDATE_CHECKSUM = 240,
-  GIT_CLONE = 250,
-  GIT_CLONE_INTO_HERE = 260,
-  OPEN_REMOTE = 270, // get if folder has a .git subfolder and check if it has a remote origin
-  DOCKER_COMPOSE_UP = 280,
-  DS = 290,
+  LOG,
+  COPY,
+  PASTE,
+  CUT,
+  NEW_FOLDER,
+  NEW_FILE,
+  RENAME_INIT,
+  RENAME_COMMIT,
+  RENAME_ABORT,
+  DELETE,
+  DUPLICATE,
+  COPY_PATH,
+  COPY_NAME,
+  EXECUTE,
+  OPEN_WITH,
+  EDIT_PERMS,
+  UNMOUNT_VOLUME,
+  DECRYPT,
+  ENCRYPT,
+  EXTRACT,
+  ARCHIVE,
+  PROPERTIES,
+  OPEN_TERMINAL,
+  RUN_IN_TERMINAL,
+  SQUOOSH_IMAGE,
+  SEND_VIA_MAIL,
+  QUICK_LOCAL_SHARE,
+  SQUOOSH_IMAGE_SEND_VIA_MAIL,
+  SYNC_WITH,
+  VALIDATE_CHECKSUM,
+  GIT_CLONE,
+  GIT_CLONE_INTO_HERE,
+  OPEN_REMOTE, // get if folder has a .git subfolder and check if it has a remote origin
+  DOCKER_COMPOSE_UP,
+  DS,
 }
 
 export interface Bookmark {
@@ -77,23 +91,23 @@ export interface ContextMenuData {
 }
 
 export enum ContextMenuType {
-  ContextMenu = 0,
-  FileListRowItem = 10,
-  FileList = 20,
-  Bookmark = 30,
-  Breadcrumb = 40,
+  ContextMenu,
+  FileListRowItem,
+  FileList,
+  Bookmark,
+  Breadcrumb,
 }
 
 export enum SelectionAction {
-  Single = 0,
-  Multiple = 1,
+  Single,
+  Multiple,
 }
 
 export type G = InstanceType<typeof App>["g"];
 
 export enum Page {
-  config = "config",
-  main = "main",
+  main,
+  config,
 }
 
 export type Config = FromSchema<typeof configSchema>;
@@ -107,6 +121,8 @@ export interface FsItem {
   ui: {
     selected: boolean;
     display: boolean;
+    bookmarked: boolean;
+    editable: boolean;
   };
   path: string;
   fs_type: FsType;
@@ -138,6 +154,6 @@ export enum FsType {
 }
 
 export enum UpdateFsItemOption {
-  Selected = 0,
-  SelectAll = 1,
+  Selected,
+  SelectAll,
 }
