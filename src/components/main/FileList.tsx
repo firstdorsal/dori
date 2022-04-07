@@ -27,7 +27,6 @@ export default class FileList extends PureComponent<FileListProps, FileListState
         className="FileList"
         /*@ts-ignore*/
         ctxmtype={ContextMenuType.FileList}
-        // TODO add handle for e.target.offsetParent.attributes.ctxmtype
       >
         <AutoSizer>
           {({ height, width }) => (

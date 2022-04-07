@@ -251,15 +251,16 @@ export const readDir = async (fsi: FsItem): Promise<FsItem[] | false> => {
   });
 };
 
-export const defaultFsItem = {
+export const defaultFsItem: FsItem = {
   ui: {
     selected: false,
     display: true,
     bookmarked: false,
     editable: false,
+    renamedFileName: "",
   },
   path: "",
-  fs_type: "",
+  fs_type: FsType.Other,
   permission: { user: -1, group: -1, other: -1 },
   owner: { gid: -1, uid: -1 },
   modificationDate: "",
@@ -268,32 +269,6 @@ export const defaultFsItem = {
 
 export const getCurrentFileList = (fileListMap: FileListMap, currentPath: string) => {
   return fileListMap[currentPath];
-};
-
-export const getMergedFileList = (
-  fileListMap: FileListMap,
-  currentDir: FsItem,
-  newFileList: FsItem[]
-) => {
-  return update(fileListMap, {
-    [currentDir.path]: {
-      $apply: (currentFileList: FsItem[]) =>
-        newFileList.map((newFsi) => {
-          const currentFsItem = currentFileList.find(
-            (currentFsi) => currentFsi.path === newFsi.path
-          );
-
-          if (currentFsItem === undefined) {
-            return newFsi;
-          }
-
-          return {
-            ...newFsi,
-            ui: { ...currentFsItem.ui },
-          };
-        }),
-    },
-  });
 };
 
 export enum Direction {
@@ -370,9 +345,10 @@ export const getContextMenuActions = (cm: ContextMenuData) => {
   return a;
 };
 
-export const getSelectedFiles = (fileList: FsItem[]) => {
-  const selectedFiles = fileList.filter((fsi) => {
-    return fsi.ui.selected === true;
-  });
-  return selectedFiles;
+export const getEditableItems = (fileList: FsItem[]) => {
+  return fileList.filter((fsi) => fsi.ui.editable === true);
+};
+
+export const getSelectedItems = (fileList: FsItem[]) => {
+  return fileList.filter((fsi) => fsi.ui.selected === true);
 };

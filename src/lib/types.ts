@@ -28,6 +28,11 @@ export interface ContextMenuActions {
   };
 }
 
+export enum PendingAction {
+  None,
+  Rename,
+}
+
 export interface Action {
   type: ActionType;
   title: string;
@@ -123,6 +128,7 @@ export interface FsItem {
     display: boolean;
     bookmarked: boolean;
     editable: boolean;
+    renamedFileName: string;
   };
   path: string;
   fs_type: FsType;

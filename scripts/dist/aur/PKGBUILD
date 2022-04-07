@@ -1,0 +1,11 @@
+# Maintainer: Paul Hennig <dori@y.gy>
+pkgname=dori-bin
+pkgver=0.1
+pkgrel=1
+pkgdesc="Simple, modern, work in progress file explorer/manager"
+url="https://y.gy"
+license=('')
+
+depends=(
+    'webkit2gtk'
+)

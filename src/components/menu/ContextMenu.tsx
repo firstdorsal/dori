@@ -22,7 +22,10 @@ export default class ContextMenu extends Component<ContextMenuProps, ContextMenu
         <ol>
           {getContextMenuActions(cm).map((action) => {
             return (
-              <li key={`action-${action.type}`} onClick={() => this.props.g.handleAction(action)}>
+              <li
+                key={`action-${action.type}`}
+                onClick={() => this.props.g.handleAction(action.type)}
+              >
                 {action.title}
               </li>
             );

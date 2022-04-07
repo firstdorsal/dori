@@ -16,7 +16,8 @@ fn main() {
             write_text_file,
             copy,
             delete_file,
-            delete_folder
+            delete_folder,
+            rename
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -92,6 +93,13 @@ async fn delete_file(path: String) -> Result<String, String> {
 #[tauri::command]
 async fn delete_folder(path: String) -> Result<String, String> {
     fs::remove_dir_all(path)
+        .map_err(|e| e.to_string())
+        .map(|_| "Success".to_string())
+}
+
+#[tauri::command]
+async fn rename(from: String, to: String) -> Result<String, String> {
+    fs::rename(from, to)
         .map_err(|e| e.to_string())
         .map(|_| "Success".to_string())
 }

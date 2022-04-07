@@ -1,23 +1,24 @@
 import { App } from "../App";
 import {
-  Action,
   ActionType,
   ClipboardType,
   ContextMenuType,
   FsItem,
+  PendingAction,
   SelectionAction,
 } from "../../lib/types";
-import { getSelectedFiles } from "../../lib/utils";
+import { getEditableItems, getLastPartOfPath, getSelectedItems } from "../../lib/utils";
 import { copy } from "../../lib/system/copy";
 import { deleteItem } from "../../lib/system/delete";
 import update from "immutability-helper";
+import { rename } from "../../lib/system/rename";
 
-export const handleAction = async (t: App, action: Action, undo = false) => {
-  switch (action.type) {
+export const handleAction = async (t: App, actionType: ActionType, undo = false) => {
+  switch (actionType) {
     case ActionType.LOG: {
       let selected;
       if (t.state.contextMenu?.type === ContextMenuType.FileListRowItem) {
-        selected = getSelectedFiles(t.state.fileListMap[t.state.currentDir.path]);
+        selected = getSelectedItems(t.state.fileListMap[t.state.currentDir.path]);
       } else if (t.state.contextMenu?.type === ContextMenuType.FileList) {
         selected = t.state.currentDir;
       }
@@ -26,7 +27,7 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
     }
     case ActionType.COPY: {
       t.setState(({ fileListMap, currentDir }) => {
-        const selected = getSelectedFiles(fileListMap[currentDir.path]);
+        const selected = getSelectedItems(fileListMap[currentDir.path]);
 
         return {
           clipboard: selected,
@@ -56,7 +57,7 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
 
     case ActionType.CUT: {
       t.setState(({ fileListMap, currentDir }) => {
-        const selected = getSelectedFiles(fileListMap[currentDir.path]);
+        const selected = getSelectedItems(fileListMap[currentDir.path]);
 
         return {
           clipboard: selected,
@@ -81,6 +82,7 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
                 v.map((fsi, i) => {
                   if (fsi.ui.selected) {
                     fsi.ui.editable = true;
+                    fsi.ui.renamedFileName = getLastPartOfPath(fsi.path);
                   }
                   return fsi;
                 }),
@@ -89,8 +91,64 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
         }
         return {
           fileListMap,
+          pendingAction: PendingAction.Rename,
         };
       });
+      break;
+    }
+    case ActionType.RENAME_ABORT: {
+      t.setState(({ fileListMap, currentDir }) => {
+        fileListMap = update(fileListMap, {
+          [currentDir.path]: {
+            $apply: (v: FsItem[]) =>
+              v.map((fsi, i) => {
+                if (fsi.ui.selected) {
+                  fsi.ui.editable = false;
+                }
+                return fsi;
+              }),
+          },
+        });
+        return {
+          fileListMap,
+          pendingAction: PendingAction.None,
+        };
+      });
+      break;
+    }
+    case ActionType.RENAME_COMMIT: {
+      t.setState(({ fileListMap, currentDir }) => {
+        fileListMap = update(fileListMap, {
+          [currentDir.path]: {
+            $apply: (v: FsItem[]) =>
+              v.map((fsi, i) => {
+                if (fsi.ui.selected) {
+                  fsi.ui.editable = false;
+                }
+                return fsi;
+              }),
+          },
+        });
+        return {
+          fileListMap,
+          pendingAction: PendingAction.None,
+        };
+      });
+      const editableItems = getEditableItems(t.state.fileListMap[t.state.currentDir.path]);
+      if (editableItems.length !== 1) {
+        throw Error("rename commit with more than one editable item is not possible");
+      }
+      const editableItem = editableItems[0];
+
+      await rename(
+        editableItem.path,
+        editableItem.path.replace(
+          getLastPartOfPath(editableItem.path),
+          editableItem.ui.renamedFileName
+        )
+      );
+      await t.reloadDirectory();
+
       break;
     }
     case ActionType.NEW_FOLDER: {
@@ -100,7 +158,7 @@ export const handleAction = async (t: App, action: Action, undo = false) => {
       break;
     }
     case ActionType.DELETE: {
-      const selected = getSelectedFiles(t.state.fileListMap[t.state.currentDir.path]);
+      const selected = getSelectedItems(t.state.fileListMap[t.state.currentDir.path]);
       const deleteHandles: Promise<any>[] = [];
 
       selected.forEach((fsi) => {

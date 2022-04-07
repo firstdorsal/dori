@@ -1,7 +1,6 @@
 import { createRef, PureComponent } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
-  arrayUntil,
   countSelected,
   defaultConfig,
   defaultFsItem,
@@ -10,12 +9,10 @@ import {
   getHotkeys,
   getNearestVisible,
   getParentPath,
-  getMergedFileList as mergeNewFileList,
-  readDir,
 } from "../lib/utils";
 import "rsuite/dist/rsuite.min.css";
 import {
-  Action,
+  ActionType,
   ClipboardType,
   Config,
   ContextMenuData,
@@ -25,13 +22,12 @@ import {
   FsType,
   Modal,
   Page,
+  PendingAction,
   SelectionAction,
   UpdateFsItemOption,
 } from "../lib/types";
-import update from "immutability-helper";
 
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { sortItems, SortMethod } from "../lib/sort";
 import { GlobalHotKeys, configure as configureHotkeys } from "react-hotkeys";
 import { readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { path } from "@tauri-apps/api";
@@ -47,6 +43,8 @@ import { updateFsItems } from "./updateFsItems/updateFsItems";
 import { toggleHiddenFiles } from "./toggleHiddenFiles/toggleHiddenFiles";
 import Titlebar from "../components/titlebar/Titlebar";
 import { RenderPage } from "./RenderPage";
+import { handleNameChange } from "./updateFsItems/handleNameChange";
+import { updateDir } from "./updateDir/updateDir";
 
 configureHotkeys({ ignoreTags: [] });
 
@@ -68,6 +66,7 @@ interface AppState {
   readonly focus: boolean;
   readonly clipBoardType: ClipboardType;
   readonly modal: Modal;
+  readonly pendingAction: PendingAction;
 }
 
 export class App extends PureComponent<{}, AppState> {
@@ -101,6 +100,7 @@ export class App extends PureComponent<{}, AppState> {
       focus: false,
       clipBoardType: ClipboardType.Copy,
       modal: Modal.None,
+      pendingAction: PendingAction.None,
     };
     this.listRef = createRef();
     this.selectMultiplePressed = false;
@@ -121,59 +121,7 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
-    const newDirPath = fsi.path;
-
-    const newFileList = await readDir(fsi);
-
-    if (newFileList === false) return;
-
-    this.setState(
-      ({ history, historyIndex, fileListMap, lastSelected, currentDir, lastSelectionAction }) => {
-        if (pushHistory === true) {
-          historyIndex++;
-          history = [...arrayUntil(history, historyIndex - 1), fsi];
-        }
-
-        if (newIndex !== undefined) {
-          historyIndex = newIndex;
-        }
-        // TODO update the visisble lines before the rest
-
-        if (fileListMap[newDirPath] === undefined) {
-          fileListMap = update(fileListMap, { $set: { [newDirPath]: newFileList } });
-        } else {
-          fileListMap = mergeNewFileList(fileListMap, currentDir, newFileList);
-        }
-
-        fileListMap[newDirPath] = sortItems(fileListMap[newDirPath], SortMethod.Alphabetic);
-
-        const [length, firstVisibleItemIndex] = countSelected(fileListMap[newDirPath]);
-
-        if (fileListMap[newDirPath].length !== 0) {
-          if (length === 0) {
-            fileListMap[newDirPath][0].ui.selected = true;
-            lastSelected = 0;
-          } else {
-            if (length > 1) {
-              lastSelectionAction = SelectionAction.Multiple;
-            }
-            if (newDirPath !== currentDir.path) {
-              lastSelected = firstVisibleItemIndex;
-            }
-          }
-        }
-        currentDir = update(currentDir, { path: { $set: newDirPath } });
-
-        return {
-          fileListMap,
-          currentDir,
-          lastSelected,
-          lastSelectionAction,
-          history,
-          historyIndex,
-        };
-      }
-    );
+    updateDir(this, fsi, pushHistory, newIndex);
   };
 
   handleBlur = () => {
@@ -295,9 +243,11 @@ export class App extends PureComponent<{}, AppState> {
       }
     },
     FOLDER_UP: () => {
+      if (this.state.pendingAction === PendingAction.Rename) return;
       this.goUpDirectory();
     },
     FOLDER_INTO: () => {
+      if (this.state.pendingAction === PendingAction.Rename) return;
       const currentFileList = getCurrentFileList(
         this.state.fileListMap,
         this.state.currentDir.path
@@ -326,6 +276,7 @@ export class App extends PureComponent<{}, AppState> {
       this.toggleHiddenFiles();
     },
     SELECT_ALL: () => {
+      if (this.state.pendingAction === PendingAction.Rename) return;
       this.selectMultiplePressed = false;
       this.updateFsItems(0, UpdateFsItemOption.SelectAll);
     },
@@ -427,13 +378,16 @@ export class App extends PureComponent<{}, AppState> {
         break;
       }
       default: {
-        break;
+        throw Error("Unknown context menu type");
       }
     }
   };
 
-  handleAction = (action: Action) => {
-    handleAction(this, action);
+  handleAction = (actionType: ActionType) => {
+    handleAction(this, actionType);
+  };
+  handleNameChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    handleNameChange(this, e, index);
   };
 
   render = () => {
@@ -481,5 +435,6 @@ export class App extends PureComponent<{}, AppState> {
     bookmarkFolder: this.bookmarkFolder,
     updateDirByPath: this.updateDirByPath,
     handleAction: this.handleAction,
+    handleNameChange: this.handleNameChange,
   };
 }
