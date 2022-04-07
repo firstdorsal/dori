@@ -1,5 +1,8 @@
 # Dori
 
+_Hmm I just forgot where my files were..._ <br>
+_Let's go and search them together!_
+
 The file explorer I always wanted for Linux.
 
 # Features
