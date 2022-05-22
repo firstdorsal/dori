@@ -314,7 +314,7 @@ export const getNearestVisible = (items: FsItem[], currentIndex: number, directi
 
 export const getContextMenuActions = (cm: ContextMenuData) => {
   const { fsi } = cm;
-
+  // holy cow is this unreadable; drugs are bad kids
   let l1 = contextMenuActions[cm.type]?.actions;
   let l2: Action[];
   let l3: Action[];
@@ -351,4 +351,8 @@ export const getEditableItems = (fileList: FsItem[]) => {
 
 export const getSelectedItems = (fileList: FsItem[]) => {
   return fileList.filter((fsi) => fsi.ui.selected === true);
+};
+
+export const isParentDirectory = (currentDirPath: string, newDirPath: string) => {
+  return getParentPath(currentDirPath) === newDirPath;
 };

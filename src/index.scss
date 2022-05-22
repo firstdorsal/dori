@@ -219,7 +219,8 @@ form.rjsf {
 
 .FileList {
   overflow: auto;
-  height: calc(100vh - calc(var(--menu-height) + var(--titlebar-height)));
+  /* FIXME: I have no idea where the 10px come from but this works for now */
+  height: calc(100vh - calc(10px + calc(var(--menu-height) + var(--titlebar-height))));
   .FileListRow:hover {
     background: var(--hover);
   }

@@ -121,7 +121,7 @@ export class App extends PureComponent<{}, AppState> {
   };
 
   updateDir = async (fsi: FsItem, pushHistory = true, newIndex?: number) => {
-    updateDir(this, fsi, pushHistory, newIndex);
+    await updateDir(this, fsi, pushHistory, newIndex);
   };
 
   handleBlur = () => {
@@ -190,7 +190,10 @@ export class App extends PureComponent<{}, AppState> {
 
   scrollElementIntoView = (index: number, position?: string) => {
     this.visibleItems = index;
-    this.listRef.current.scrollToItem(index, position);
+
+    if (this.listRef?.current?.scrollToItem !== undefined) {
+      this.listRef.current.scrollToItem(index, position);
+    }
   };
 
   hotkeyHandlers = {
